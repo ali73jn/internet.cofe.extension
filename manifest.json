@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "همیار کافینت",
+  "version": "15",
+  "description": "مدیریت پیشرفته بوکمارک ها",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+
+  "chrome_url_overrides": {
+    "newtab": "dashboard.html"
+  },
+  "permissions": [
+    "storage",
+    "bookmarks"
+
+  ],
+	"host_permissions": [
+	"http://*/*",
+    "https://*/*"
+  ]
+  
+}
