@@ -1,0 +1,342 @@
+// --- Compressor Logic ---
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingText = document.getElementById('loadingText');
+
+function showLoading(text = 'در حال پردازش...') {
+    loadingText.textContent = text;
+    loadingOverlay.classList.remove('hidden');
+    void loadingOverlay.offsetWidth;
+    loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+    loadingOverlay.classList.add('opacity-100');
+}
+
+function hideLoading() {
+    loadingOverlay.classList.remove('opacity-100');
+    loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+        loadingOverlay.classList.add('hidden');
+    }, 300);
+}
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const workspace = document.getElementById('workspace');
+
+const originalPreview = document.getElementById('originalPreview');
+const compressedPreview = document.getElementById('compressedPreview');
+
+const originalSizeTxt = document.getElementById('originalSize');
+const compressedSizeTxt = document.getElementById('compressedSize');
+const compressionRatioTxt = document.getElementById('compressionRatio');
+
+const originalResTxt = document.getElementById('originalRes');
+const compressedResTxt = document.getElementById('compressedRes');
+
+const qualitySlider = document.getElementById('qualitySlider');
+const qualityValue = document.getElementById('qualityValue');
+
+const scaleSlider = document.getElementById('scaleSlider');
+const scaleValue = document.getElementById('scaleValue');
+
+const formatSelect = document.getElementById('formatSelect');
+
+const targetSizeInput = document.getElementById('targetSizeInput');
+const applyTargetBtn = document.getElementById('applyTargetBtn');
+const grayscaleToggle = document.getElementById('grayscaleToggle');
+const metadataToggle = document.getElementById('metadataToggle');
+
+const downloadBtn = document.getElementById('downloadBtn');
+const btnExtTxt = document.getElementById('btnExtTxt');
+const resetBtn = document.getElementById('resetBtn');
+
+// State Variables
+let originalFile = null;
+let originalImage = new Image();
+let originalSize = 0;
+let compressedBlobUrl = null;
+let originalExifData = null;
+
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('border-red-500', 'bg-neutral-900');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('border-red-500', 'bg-neutral-900');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('border-red-500', 'bg-neutral-900');
+
+    if (e.dataTransfer.files.length) {
+        handleFile(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+uploadArea.addEventListener('click', (e) => {
+    if(e.target.tagName !== 'BUTTON') {
+        fileInput.click();
+    }
+});
+
+function handleFile(file) {
+    if (!file.type.match(/image.*/)) {
+        alert('لطفاً یک فایل تصویری معتبر انتخاب کنید.');
+        return;
+    }
+
+    showLoading('در حال بارگذاری و خواندن تصویر...');
+
+    setTimeout(() => {
+        originalFile = file;
+        originalSize = file.size;
+        originalSizeTxt.textContent = formatBytes(originalSize);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            originalExifData = null;
+            if (file.type === 'image/jpeg') {
+                try {
+                    originalExifData = piexif.load(e.target.result);
+                } catch (err) {
+                    console.warn("Failed to load EXIF:", err);
+                }
+            }
+
+            originalImage.onload = () => {
+                originalPreview.src = originalImage.src;
+                originalResTxt.textContent = `${originalImage.width} × ${originalImage.height} px`;
+                
+                uploadArea.classList.add('hidden');
+                workspace.classList.remove('hidden');
+                workspace.classList.add('flex');
+                
+                compressImage();
+            };
+            originalImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }, 50);
+}
+
+function compressImage() {
+    if (!originalImage.src) return;
+
+    showLoading('در حال فشرده‌سازی تصویر...');
+
+    setTimeout(() => {
+        const quality = parseFloat(qualitySlider.value);
+        const scale = parseFloat(scaleSlider.value);
+        const format = formatSelect.value;
+        
+        qualityValue.textContent = Math.round(quality * 100) + '%';
+        scaleValue.textContent = Math.round(scale * 100) + '%';
+
+        const ext = format === 'image/jpeg' ? 'JPG' : (format === 'image/webp' ? 'WEBP' : 'PNG');
+        btnExtTxt.textContent = ext;
+
+        const canvas = document.createElement('canvas');
+        const newWidth = Math.max(1, Math.round(originalImage.width * scale));
+        const newHeight = Math.max(1, Math.round(originalImage.height * scale));
+        
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        compressedResTxt.textContent = `${newWidth} × ${newHeight} px`;
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (grayscaleToggle.checked) {
+            ctx.filter = 'grayscale(100%)';
+        } else {
+            ctx.filter = 'none';
+        }
+        
+        if (format === 'image/jpeg') {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                hideLoading();
+                return;
+            }
+
+            const processFinalBlob = (finalBlob) => {
+                if (compressedBlobUrl) {
+                    URL.revokeObjectURL(compressedBlobUrl);
+                }
+
+                compressedBlobUrl = URL.createObjectURL(finalBlob);
+                compressedPreview.src = compressedBlobUrl;
+                
+                compressedSizeTxt.textContent = formatBytes(finalBlob.size);
+                
+                let savedPercentage = ((originalSize - finalBlob.size) / originalSize) * 100;
+                if (savedPercentage > 0) {
+                    compressionRatioTxt.innerHTML = `<span class="font-normal text-emerald-300 mr-1 text-[10px] md:text-xs">کاهش:</span> %${savedPercentage.toFixed(1)}`;
+                    compressionRatioTxt.className = 'text-emerald-400 text-xs font-bold bg-emerald-950/50 py-1.5 px-3 rounded-lg border border-emerald-900/50';
+                } else {
+                    compressionRatioTxt.innerHTML = `<span class="font-normal text-red-300 mr-1 text-[10px] md:text-xs">افزایش:</span> %${Math.abs(savedPercentage).toFixed(1)}`;
+                    compressionRatioTxt.className = 'text-red-400 text-xs font-bold bg-red-950/50 py-1.5 px-3 rounded-lg border border-red-900/50';
+                }
+
+                downloadBtn.href = compressedBlobUrl;
+                const originalName = originalFile.name.substring(0, originalFile.name.lastIndexOf('.')) || originalFile.name;
+                downloadBtn.download = `${originalName}-compressed.${ext.toLowerCase()}`;
+                
+                downloadBtn.classList.remove('pointer-events-none', 'opacity-50');
+                
+                hideLoading(); 
+            };
+
+            if (!metadataToggle.checked && format === 'image/jpeg' && originalExifData) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const compressedDataUrl = e.target.result;
+                        const exifStr = piexif.dump(originalExifData);
+                        const finalDataUrl = piexif.insert(exifStr, compressedDataUrl);
+                        
+                        fetch(finalDataUrl)
+                            .then(res => res.blob())
+                            .then(processFinalBlob)
+                            .catch(() => processFinalBlob(blob));
+                    } catch (err) {
+                        console.warn("Failed to insert EXIF:", err);
+                        processFinalBlob(blob);
+                    }
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                processFinalBlob(blob);
+            }
+
+        }, format, quality);
+    }, 50);
+}
+
+// Event Listeners for Controls
+qualitySlider.addEventListener('input', () => qualityValue.textContent = Math.round(qualitySlider.value * 100) + '%');
+qualitySlider.addEventListener('change', compressImage);
+
+scaleSlider.addEventListener('input', () => scaleValue.textContent = Math.round(scaleSlider.value * 100) + '%');
+scaleSlider.addEventListener('change', compressImage);
+
+formatSelect.addEventListener('change', compressImage);
+grayscaleToggle.addEventListener('change', compressImage);
+metadataToggle.addEventListener('change', compressImage);
+
+// Target Size Logic
+applyTargetBtn.addEventListener('click', async () => {
+    if (!originalImage.src) return;
+    
+    const targetKB = parseFloat(targetSizeInput.value);
+    if (isNaN(targetKB) || targetKB <= 0) {
+        alert('لطفاً یک حجم معتبر (بالاتر از ۰) وارد کنید.');
+        return;
+    }
+    
+    const format = formatSelect.value;
+    if (format === 'image/png') {
+        alert('رسیدن به حجم دقیق در فرمت PNG ممکن نیست (پشتیبانی از پارامتر کیفیت ندارد). لطفاً WEBP یا JPEG را انتخاب کنید.');
+        return;
+    }
+
+    const targetBytes = targetKB * 1024;
+    
+    showLoading('در حال محاسبه بهترین کیفیت...');
+
+    const originalBtnText = applyTargetBtn.textContent;
+    applyTargetBtn.textContent = 'محاسبه...';
+    applyTargetBtn.disabled = true;
+    applyTargetBtn.classList.add('opacity-50');
+
+    setTimeout(async () => {
+        const scale = parseFloat(scaleSlider.value);
+        const newWidth = Math.max(1, Math.round(originalImage.width * scale));
+        const newHeight = Math.max(1, Math.round(originalImage.height * scale));
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (grayscaleToggle.checked) ctx.filter = 'grayscale(100%)';
+        if (format === 'image/jpeg') {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+        const getBlobSize = (q) => new Promise(resolve => {
+            canvas.toBlob(blob => resolve(blob ? blob.size : Number.MAX_SAFE_INTEGER), format, q);
+        });
+
+        let minQ = 0.01;
+        let maxQ = 1.0;
+        let bestQ = 0.01;
+
+        for (let i = 0; i < 8; i++) {
+            const midQ = (minQ + maxQ) / 2;
+            const size = await getBlobSize(midQ);
+            
+            if (size <= targetBytes) {
+                bestQ = midQ;
+                minQ = midQ; 
+            } else {
+                maxQ = midQ; 
+            }
+        }
+
+        qualitySlider.value = bestQ;
+        qualityValue.textContent = Math.round(bestQ * 100) + '%';
+        
+        applyTargetBtn.textContent = originalBtnText;
+        applyTargetBtn.disabled = false;
+        applyTargetBtn.classList.remove('opacity-50');
+        
+        compressImage(); 
+    }, 50);
+});
+
+// Reset
+resetBtn.addEventListener('click', () => {
+    originalFile = null;
+    originalImage = new Image();
+    originalExifData = null;
+    fileInput.value = '';
+    targetSizeInput.value = '';
+    grayscaleToggle.checked = false;
+    metadataToggle.checked = true;
+    
+    if (compressedBlobUrl) {
+        URL.revokeObjectURL(compressedBlobUrl);
+        compressedBlobUrl = null;
+    }
+
+    workspace.classList.add('hidden');
+    workspace.classList.remove('flex');
+    uploadArea.classList.remove('hidden');
+    
+    downloadBtn.classList.add('pointer-events-none', 'opacity-50');
+    compressionRatioTxt.classList.add('hidden');
+});

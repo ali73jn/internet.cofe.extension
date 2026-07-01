@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ابزار برش پرسپکتیو</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Toolbar -->
+    <header id="toolbar">
+        <div class="toolbar-group toolbar-main">
+            <button id="btn-open" class="btn btn-primary" title="باز کردن تصویر (Ctrl+O)">
+                <span class="btn-emoji">📂</span>
+                <span class="btn-label">باز کردن</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group toolbar-edit">
+            <button id="btn-undo" class="btn" title="بازگشت (Ctrl+Z)" disabled>
+                <span class="btn-emoji">↩️</span>
+            </button>
+            <button id="btn-redo" class="btn" title="دوباره (Ctrl+Y)" disabled>
+                <span class="btn-emoji">↪️</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group toolbar-transform">
+			<button id="btn-rotate-cw" class="btn" title="چرخش ساعت‌گرد (R)" disabled>
+				<span class="btn-emoji mirrored">🔄</span>
+				<span class="btn-label">چرخش ساعتگرد</span>
+			</button>
+
+			<button id="btn-rotate-ccw" class="btn" title="چرخش پادساعت‌گرد (Shift+R)" disabled>
+				<span class="btn-emoji">🔄</span>
+				<span class="btn-label">چرخش پادساعتگرد</span>
+			</button>
+            <button id="btn-flip-h" class="btn" title="آینه افقی (H)" disabled>
+                <span class="btn-emoji">↔️</span>
+                <span class="btn-label">آیینه افقی</span>
+            </button>
+            <button id="btn-flip-v" class="btn" title="آینه عمودی (V)" disabled>
+                <span class="btn-emoji">↕️</span>
+                <span class="btn-label">آیینه عمودی</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group toolbar-crop">
+            <button id="btn-detect" class="btn btn-accent" title="تشخیص خودکار گوشه‌ها (D)" disabled>
+                <span class="btn-emoji">🔍</span>
+                <span class="btn-label">تشخیص</span>
+            </button>
+            <button id="btn-fit-corners" class="btn" title="نمایش نقاط در وسط صفحه" disabled>
+                <span class="btn-emoji">📐</span>
+                <span class="btn-label">نمایش نقاط</span>
+            </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group toolbar-view">
+            <button id="btn-fit" class="btn" title="متناسب با صفحه (F)" disabled>
+                <span class="btn-emoji">👁️</span>
+                <span class="btn-label">متناسب</span>
+            </button>
+            <button id="btn-reset" class="btn" title="اندازه واقعی (0)" disabled>
+                <span class="btn-label">۱:۱</span>
+            </button>
+            <span id="zoom-display" class="zoom-label">۱۰۰٪</span>
+        </div>
+
+        <div style="flex:1"></div>
+
+        <div class="toolbar-group toolbar-help">
+            <button id="btn-help" class="btn btn-ghost" title="میانبرهای صفحه‌کلید (?)">
+                <span class="btn-emoji">❓</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Canvas (2/3) -->
+        <main id="canvas-container">
+            <canvas id="main-canvas"></canvas>
+
+            <!-- Drop overlay -->
+            <div id="drop-overlay" class="hidden">
+                <div class="drop-message">
+                    <span style="font-size:48px;">📂</span>
+                    <p>تصویر را اینجا رها کنید</p>
+                </div>
+            </div>
+
+            <!-- Welcome -->
+            <div id="welcome-message">
+                <div class="welcome-content">
+                    <div class="welcome-icon" style="font-size:64px;">🖼️</div>
+                    <h1>ابزار برش پرسپکتیو</h1>
+                    <p>یک تصویر باز کنید تا شروع کنید</p>
+                    <div class="welcome-options">
+                        <button id="btn-welcome-open" class="btn btn-primary btn-large">
+                            <span class="btn-emoji">📂</span>
+                            انتخاب تصویر
+                        </button>
+                        <p class="hint">یا تصویر را بکشید و رها کنید، یا Ctrl+V بزنید</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading overlay -->
+            <div id="loading-overlay" class="hidden">
+                <div class="loading-spinner"></div>
+                <p id="loading-text">در حال پردازش...</p>
+            </div>
+        </main>
+
+
+
+		<!-- Preview Panel (1/3) -->
+		<aside id="preview-panel">
+			<div class="preview-panel-header">
+				<span class="panel-icon" style="font-size:18px;">📋</span>
+				<span>پیش‌نمایش خروجی</span>
+			</div>
+			<div class="preview-panel-body">
+				<canvas id="live-preview-canvas"></canvas>
+				<div id="preview-placeholder" class="preview-empty">
+					<span style="font-size:40px;">🖼️</span>
+					<p>ابتدا یک تصویر بارگذاری کنید</p>
+				</div>
+			</div>
+
+			<!-- Export Controls -->
+			<div class="preview-panel-footer" id="export-controls">
+				<!-- اسلایدر کیفیت -->
+				<div class="export-field full-width">
+					<label for="export-quality">🎨 کیفیت:</label>
+					<input type="range" id="export-quality" min="1" max="100" value="100">
+					<span id="quality-value">100٪</span>
+				</div>
+
+				<!-- اسلایدر مقیاس -->
+				<div class="export-field full-width">
+					<label for="export-scale">📏 ابعاد:</label>
+					<input type="range" id="export-scale" min="25" max="100" value="100">
+					<span id="scale-value">۱۰۰٪</span>
+				</div>
+
+				<!-- ردیف فرمت و دکمه ذخیره -->
+				<div class="export-actions">
+					<div class="export-field">
+						<label for="export-format">📁 فرمت:</label>
+						<select id="export-format">
+							<option value="jpeg" selected>JPEG</option>
+							<option value="png">PNG</option>
+						</select>
+					</div>
+					<button id="btn-export-save" class="btn btn-success btn-save">
+						<span class="btn-emoji">💾</span>
+						ذخیره
+					</button>
+				</div>
+
+				<!-- باکس گزارش خروجی -->
+				<div id="export-info" class="export-info">
+					📂 تصویری بارگذاری نشده است.
+				</div>
+			</div>
+		</aside>
+		
+    </div>
+
+    <!-- Help modal -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⌨️ میانبرهای صفحه‌کلید</h2>
+                <button id="btn-help-close" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="shortcuts-table">
+                    <thead><tr><th>میانبر</th><th>عملیات</th></tr></thead>
+                    <tbody>
+                        <tr><td><kbd>Ctrl+O</kbd></td><td>باز کردن تصویر</td></tr>
+                        <tr><td><kbd>Ctrl+S</kbd></td><td>ذخیره تصویر</td></tr>
+                        <tr><td><kbd>Ctrl+Z</kbd></td><td>بازگشت</td></tr>
+                        <tr><td><kbd>Ctrl+Y</kbd></td><td>دوباره</td></tr>
+                        <tr><td><kbd>R</kbd></td><td>چرخش ۹۰° ساعت‌گرد</td></tr>
+                        <tr><td><kbd>Shift+R</kbd></td><td>چرخش ۹۰° پادساعت‌گرد</td></tr>
+                        <tr><td><kbd>H</kbd></td><td>آینه افقی</td></tr>
+                        <tr><td><kbd>V</kbd></td><td>آینه عمودی</td></tr>
+                        <tr><td><kbd>D</kbd></td><td>تشخیص خودکار گوشه‌ها</td></tr>
+                        <tr><td><kbd>F</kbd></td><td>متناسب با صفحه</td></tr>
+                        <tr><td><kbd>0</kbd></td><td>اندازه واقعی ۱۰۰٪</td></tr>
+                        <tr><td><kbd>+</kbd> / <kbd>=</kbd></td><td>بزرگ‌نمایی</td></tr>
+                        <tr><td><kbd>-</kbd></td><td>کوچک‌نمایی</td></tr>
+                        <tr><td><kbd>Space + کشیدن</kbd></td><td>جابجایی صفحه</td></tr>
+                        <tr><td><kbd>وسط ماوس + کشیدن</kbd></td><td>جابجایی صفحه</td></tr>
+                        <tr><td><kbd>اسکرول ماوس</kbd></td><td>بزرگ/کوچک‌نمایی</td></tr>
+                        <tr><td><kbd>Ctrl+V</kbd></td><td>جای‌گذاری از کلیپ‌بورد</td></tr>
+                        <tr><td><kbd>Escape</kbd></td><td>انصراف / بستن</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-input" accept="image/*" hidden>
+
+    <!-- Status Bar -->
+    <footer id="status-bar">
+        <span id="status-zoom" class="status-item">زوم: ۱۰۰٪</span>
+        <span class="status-sep">│</span>
+        <span id="status-image-size" class="status-item">ابعاد: —</span>
+        <span class="status-sep">│</span>
+        <span id="status-crop-size" class="status-item">برش: —</span>
+        <span class="status-sep">│</span>
+        <span id="status-mouse" class="status-item">موقعیت: —</span>
+        <span style="flex:1"></span>
+        <span id="status-opencv" class="status-item status-indicator">
+            <span class="indicator-dot" id="opencv-indicator"></span>
+            OpenCV: در حال بارگذاری...
+        </span>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/viewport.js"></script>
+    <script src="js/imageLoader.js"></script>
+    <script src="js/handles.js"></script>
+    <script src="js/crop.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/detect.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

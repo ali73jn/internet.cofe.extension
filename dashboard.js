@@ -3539,7 +3539,116 @@ class SearchManager {
 class EventManager {
 static setup() {
     console.log('تنظیم رویدادها...');
+	
+	const imageCompressorBtn = document.getElementById("image-compressor-btn");
+	if (imageCompressorBtn) {
+		imageCompressorBtn.addEventListener("click", () => {
+			window.location.href = "Image_Compressor/Image_Compressor.html";
+		});
+	}
+	
+const perspectiveCropBtn = document.getElementById("perspective-crop-btn");
+
+if (perspectiveCropBtn) {
+    perspectiveCropBtn.addEventListener("click", () => {
+        chrome.tabs.update({
+            url: "file:///C:/00-EXTENSION/01-bookmarks/PerspectiveCrop/index.html"
+        });
+    });
+}
+	
+	const removeBgBtn = document.getElementById("remove-bg-btn");
+	if (removeBgBtn) {
+		removeBgBtn.addEventListener("click", () => {
+			window.location.href = "https://www.remove.bg/upload";
+		});
+	}
     
+	const imageToTextBtn = document.getElementById("image-to-text-btn");
+	if (imageToTextBtn) {
+		imageToTextBtn.addEventListener("click", () => {
+			window.location.href = "https://images.google.com";
+		});
+	}
+
+	const pdfEditorBtn = document.getElementById("pdf-editor-btn");
+	if (pdfEditorBtn) {
+		pdfEditorBtn.addEventListener("click", () => {
+			window.location.href = "https://www.ilovepdf.com";
+		});
+	}
+
+
+	const persianCalendarBtn = document.getElementById("persian-calendar-btn");
+	if (persianCalendarBtn) {
+		persianCalendarBtn.addEventListener("click", () => {
+			window.location.href = "https://www.bahesab.ir/time/calendar/";
+		});
+	}
+
+
+	const historyBtn = document.getElementById("history-btn");
+	if (historyBtn) {
+		historyBtn.addEventListener("click", async () => {
+			const [tab] = await chrome.tabs.query({
+				active: true,
+				currentWindow: true
+			});
+
+			chrome.tabs.update(tab.id, {
+				url: "chrome://history"
+			});
+		});
+	}
+
+	const downloadsBtn = document.getElementById("downloads-btn");
+	if (downloadsBtn) {
+		downloadsBtn.addEventListener("click", async () => {
+			const [tab] = await chrome.tabs.query({
+				active: true,
+				currentWindow: true
+			});
+
+			chrome.tabs.update(tab.id, {
+				url: "chrome://downloads"
+			});
+		});
+	}
+
+
+	const passwordBtn = document.getElementById("password-manager-btn");
+	if (passwordBtn) {
+		passwordBtn.addEventListener("click", () => {
+			chrome.tabs.update({
+				url: "chrome://password-manager"
+			});
+		});
+	}
+
+	const bookmarksBtn = document.getElementById("bookmarks-btn");
+	if (bookmarksBtn) {
+		bookmarksBtn.addEventListener("click", () => {
+
+			const isVivaldi = navigator.userAgent.includes("Vivaldi");
+
+			chrome.tabs.update({
+				url: isVivaldi
+					? "vivaldi://bookmarks"
+					: "chrome://bookmarks"
+			});
+
+		});
+	}
+
+	const extensionsBtn = document.getElementById("extensions-btn");
+	if (extensionsBtn) {
+		extensionsBtn.addEventListener("click", () => {
+			chrome.tabs.update({
+				url: "chrome://extensions"
+			});
+		});
+	}
+	
     const editModeBtn = document.getElementById('edit-mode-btn');
     if (editModeBtn) {
         editModeBtn.addEventListener('click', (e) => {

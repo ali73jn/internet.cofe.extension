@@ -1570,19 +1570,6 @@ html, body {
 *::-webkit-scrollbar-thumb { background: transparent !important; }
 *::-webkit-scrollbar-track { background: transparent !important; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 #edit-mode-btn {
     width: 48px;
     height: 48px;
@@ -1603,4 +1590,104 @@ html, body {
     background: rgba(30, 30, 30, 0.9) !important;
     border-color: rgba(255, 255, 255, 0.2);
     color: #e2e8f0;
+}
+
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   TOOLBARS
+   ========================================================== */
+
+#left-toolbar,
+#bottom-left-toolbar{
+    position:fixed;
+    left:0;
+    display:grid;
+    gap:4px;
+    z-index:10000;
+}
+
+#left-toolbar{
+    top:10px;
+}
+
+#bottom-left-toolbar{
+    bottom:10px;
+}
+
+.toolbar-item{
+    position:relative;
+    width:42px;
+    height:34px;
+}
+
+.left-toolbar-btn{
+
+    position:absolute;
+    left:0;
+    top:0;
+    width:30px;
+    height:34px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    padding:0;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(0,0,0,.08);
+    border-left:none;
+    border-radius:0 12px 12px 0;
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
+    cursor:pointer;
+    z-index:1;
+    transition:
+        width .18s cubic-bezier(.4,0,.2,1),
+        box-shadow .18s,
+        background .18s;
+}
+
+.left-toolbar-btn:hover{
+
+    width:140px;
+
+    background:#fff;
+
+    box-shadow:0 4px 16px rgba(0,0,0,.18);
+
+    z-index:100;
+}
+
+.icon{
+
+    flex:0 0 32px;
+    width:42px;
+    height:34px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:18px;
+}
+
+.label{
+    white-space:nowrap;
+    opacity:0;
+    transform:translateX(-8px);
+    transition:
+        opacity .15s ease,
+        transform .15s ease;
+    font-size:13px;
+    color:#333;
+    pointer-events:none;
+}
+
+.left-toolbar-btn:hover .label{
+    opacity:1;
+    transform:translateX(0);
 }
