@@ -3547,15 +3547,27 @@ static setup() {
 		});
 	}
 	
-const perspectiveCropBtn = document.getElementById("perspective-crop-btn");
+	const perspectiveCropBtn = document.getElementById("perspective-crop-btn");
 
-if (perspectiveCropBtn) {
-    perspectiveCropBtn.addEventListener("click", () => {
-        chrome.tabs.update({
-            url: "file:///C:/00-EXTENSION/01-bookmarks/PerspectiveCrop/index.html"
-        });
-    });
-}
+	if (perspectiveCropBtn) {
+		perspectiveCropBtn.addEventListener("click", () => {
+			chrome.tabs.update({
+				url: "file:///C:/00-EXTENSION/01-bookmarks/PerspectiveCrop/index.html"
+			});
+		});
+	}
+	
+	
+	const pdfBtn = document.getElementById("pdf-btn");
+
+	if (pdfBtn) {
+		pdfBtn.addEventListener("click", () => {
+			chrome.tabs.update({
+				url: "file:///C:/00-EXTENSION/01-bookmarks/Image_to_pdf/Image_to_pdf.html"
+			});
+		});
+	}
+	
 	
 	const removeBgBtn = document.getElementById("remove-bg-btn");
 	if (removeBgBtn) {
