@@ -9,6 +9,12 @@
 </div>
 
 ---
+<img width="1875" height="919" alt="2026-09-24 13 07 42 newtab 420bc8b5663c" src="https://github.com/user-attachments/assets/143bd9dc-b2f2-4457-bf72-726a320309a0" />
+<img width="1876" height="919" alt="2026-09-24 13 08 31 newtab 3229d80904fa" src="https://github.com/user-attachments/assets/d34bae00-1a7c-4142-a7d0-52ba607e8997" />
+<img width="1077" height="900" alt="2026-09-24 13 02 18  144934f36bc7" src="https://github.com/user-attachments/assets/92f0299a-802c-481b-9614-b3553bad85b8" />
+<img width="1877" height="917" alt="2026-09-24 13 01 32  1b37d73650de" src="https://github.com/user-attachments/assets/bfc14d5e-3762-4962-bb72-695d4fea3135" />
+<img width="1040" height="899" alt="2026-09-24 12 54 35 dnmelcfmjigemgnofcblbmmphpojccde 710bb48ab5b3" src="https://github.com/user-attachments/assets/179df274-9c36-449b-bdd4-a3d40192b4b7" />
+
 
 # ✨ امکانات
 
