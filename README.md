@@ -22,7 +22,9 @@
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/bfc14d5e-3762-4962-bb72-695d4fea3135" width="48%">
+  <img src="https://github.com/user-attachments/assets/5fc77c79-2f38-4c08-bbbd-16208ff157ba" width="48%">
 </div>
+
 
 
 # ✨ امکانات
