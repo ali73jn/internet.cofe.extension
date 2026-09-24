@@ -1,248 +1,1759 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ابزار برش پرسپکتیو</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>اسکنر</title>
+<style>
+:root{
+  --bg:#f4f7fb;
+  --card:#fff;
+  --text:#182236;
+  --muted:#728096;
+  --line:#e3e9f3;
+  --p:#4f46e5;
+  --p2:#7c3aed;
+  --ok:#0f9d72;
+  --bad:#d9364f;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{
+  font-family:Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+}
+button,input,select{font:inherit}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 2px 10px rgba(15,23,42,.04);
+  z-index:10;
+}
+.tb-tools{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.tb-right{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex:0 0 auto;
+  margin-inline-start:auto;
+}
+.tbtn{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f7f9fc;
+  color:#374151;
+  font-weight:800;
+  font-size:11px;
+  cursor:pointer;
+  transition:.15s;
+  white-space:nowrap;
+}
+.tbtn:hover:not(:disabled){background:#eef2ff;border-color:#c7cdf5;transform:translateY(-1px)}
+.tbtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.tbtn.primary{
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 5px 14px rgba(79,70,229,.22);
+}
+.tbtn.primary:hover:not(:disabled){filter:brightness(1.05)}
+.tbtn.danger{background:#fff0f2;color:#b8243d;border-color:#fbd0d7}
+.tbtn.danger:hover:not(:disabled){background:#ffe1e6}
+#dlJpg,#dlPng{background:#def7ed;color:#087358;border-color:transparent}
+#dlPdf{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}
+#dlPdf:hover:not(:disabled){filter:brightness(1.06)}
+#printBtn{background:linear-gradient(135deg,#0891b2,#0ea5e9);color:#fff;border-color:transparent}
+#printBtn:hover:not(:disabled){filter:brightness(1.06)}
+
+/* ---------- Layout ---------- */
+.layout{
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:65% 35%;
+  direction:ltr;
+  overflow:hidden;
+}
+.layout>*{direction:rtl}
+
+/* ---------- Left ---------- */
+.left{
+  position:relative;
+  min-width:0;
+  min-height:0;
+  padding:12px;
+  overflow:hidden;
+}
+.canvas-shell{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:14px;
+  overflow:hidden;
+  background:repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/18px 18px;
+  user-select:none;
+  transition:outline .15s,background .15s;
+}
+.canvas-shell.drag-over{
+  outline:3px dashed #4f46e5;
+  outline-offset:-8px;
+  background:
+    linear-gradient(rgba(79,70,229,.06),rgba(79,70,229,.06)),
+    repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/18px 18px;
+}
+.canvas-wrap{
+  position:absolute;
+  top:0;left:0;
+  transform-origin:0 0;
+  will-change:width,height,transform;
+}
+.canvas-wrap canvas{display:block;width:100%;height:100%}
+.overlay{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  touch-action:none;
+}
+
+/* Empty state (drop zone + button) */
+.empty{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  z-index:4;
+}
+.empty-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  text-align:center;
+  color:var(--muted);
+  pointer-events:none;
+}
+.empty-icon{font-size:46px;opacity:.45;line-height:1}
+.empty-title{font-size:14px;font-weight:800;color:var(--text)}
+.empty-sub{font-size:11px;line-height:1.6}
+.empty-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:11px 20px;
+  border:0;
+  border-radius:11px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;
+  font-weight:900;
+  font-size:12.5px;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(79,70,229,.26);
+  transition:.15s;
+  margin-top:8px;
+  pointer-events:auto;
+}
+.empty-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.empty-btn:active{transform:translateY(0)}
+
+.hint{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  font-size:10px;
+  color:var(--muted);
+  font-weight:800;
+  padding:6px 10px;
+  border-radius:9px;
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  pointer-events:none;
+  backdrop-filter:blur(6px);
+  z-index:5;
+  line-height:1.7;
+  text-align:right;
+  direction:rtl;
+}
+.hint-line{display:block;white-space:nowrap}
+
+/* ---------- Right ---------- */
+.right{
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  background:#fff;
+  border-left:1px solid var(--line);
+  overflow:hidden;
+}
+.right-top{
+  flex:0 0 auto;
+  padding:12px 12px 0;
+}
+.right-scroll{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  padding:10px 12px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.panel{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fbfcfe;
+}
+.panel h3{
+  margin:0 0 9px;
+  font-size:11.5px;
+  font-weight:800;
+  color:#475569;
+}
+
+/* ---------- Unified slider lines ---------- */
+.slider-line{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:8px;
+  align-items:center;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+.slider-line:last-child{margin-bottom:0}
+.slider-line .lbl{color:var(--muted);white-space:nowrap}
+.slider-line .lbl b{color:#4f46e5;font-weight:900}
+.slider-line input[type=range]{
+  width:100%;
+  height:4px;
+  -webkit-appearance:none;
+  appearance:none;
+  background:linear-gradient(90deg,#4f46e5,#7c3aed);
+  border-radius:999px;
+  outline:none;
+  cursor:pointer;
+}
+.slider-line input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;border:2.5px solid #4f46e5;cursor:pointer;
+  box-shadow:0 2px 6px rgba(79,70,229,.3);
+}
+.slider-line input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;border:2.5px solid #4f46e5;cursor:pointer;
+  box-shadow:0 2px 6px rgba(79,70,229,.3);
+}
+.slider-line input[type=range]:disabled{opacity:.35;cursor:not-allowed}
+
+/* ---------- Badges ---------- */
+.badges-line{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+  justify-content:space-between;
+}
+.badge{
+  padding:4px 10px;
+  border-radius:8px;
+  font-size:10.5px;
+  font-weight:900;
+  white-space:nowrap;
+  line-height:1;
+  min-height:20px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.badge-dim{background:#e0f2fe;color:#075985}
+.badge-size{background:#eef2ff;color:#4338ca}
+
+/* ---------- Output box (zoomable) ---------- */
+.output-box{
+  position:relative;
+  height:260px;
+  border-radius:11px;
+  overflow:hidden;
+  background:repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/16px 16px;
+}
+.output-empty{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  font-size:11px;
+  text-align:center;
+  padding:20px 10px;
+  line-height:1.9;
+  pointer-events:none;
+}
+.output-box.has-output .output-empty{display:none}
+.output-canvas-wrap{
+  position:absolute;
+  inset:0;
+  display:none;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none;
+}
+.output-box.has-output .output-canvas-wrap{display:block}
+.output-canvas-wrap canvas{
+  position:absolute;
+  top:0;left:0;
+  display:block;
+  max-width:none;
+  max-height:none;
+  transform-origin:0 0;
+  will-change:transform;
+  box-shadow:0 6px 20px rgba(15,23,42,.12);
+  background:#fff;
+}
+.output-zoom-hint{
+  position:absolute;
+  bottom:6px;left:6px;
+  font-size:9px;
+  font-weight:800;
+  color:var(--muted);
+  background:rgba(255,255,255,.88);
+  padding:3px 7px;
+  border-radius:6px;
+  pointer-events:none;
+  display:none;
+  direction:rtl;
+  z-index:3;
+}
+.output-box.has-output .output-zoom-hint{display:block}
+.output-box.has-output .output-canvas-wrap{cursor:grab}
+.output-box.panning .output-canvas-wrap{cursor:grabbing}
+
+/* ---------- Fields row ---------- */
+.field-row{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:8px;
+  align-items:end;
+}
+.field label{
+  display:block;
+  font-size:10.5px;
+  color:var(--muted);
+  margin-bottom:4px;
+  font-weight:800;
+}
+.field select{
+  width:100%;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-size:11.5px;
+  color:var(--text);
+}
+.field select:disabled{opacity:.5}
+
+/* ---------- Invert toggle ---------- */
+.invert-toggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  cursor:pointer;
+  user-select:none;
+  font-size:10.5px;
+  font-weight:800;
+  color:var(--muted);
+  height:36px;
+  transition:.15s;
+}
+.invert-toggle:hover{border-color:#c7cdf5}
+.invert-toggle input{
+  -webkit-appearance:none;appearance:none;
+  width:30px;height:16px;border-radius:999px;
+  background:#cbd5e1;position:relative;cursor:pointer;
+  transition:.2s;margin:0;flex:0 0 auto;
+}
+.invert-toggle input::after{
+  content:'';position:absolute;top:2px;right:2px;
+  width:12px;height:12px;border-radius:50%;
+  background:#fff;transition:.2s;
+}
+.invert-toggle input:checked{background:#4f46e5}
+.invert-toggle input:checked::after{right:16px}
+.invert-toggle input:disabled{opacity:.5;cursor:not-allowed}
+.invert-toggle.active{color:#4f46e5;border-color:#c7cdf5;background:#f5f6ff}
+
+/* ---------- Pages ---------- */
+.pages{display:grid;gap:6px;max-height:240px;overflow-y:auto;padding:2px}
+.page{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  cursor:grab;
+  transition:border-color .15s,background .15s;
+  user-select:none;
+}
+.page:hover{border-color:#c7cdf5}
+.page.active{border-color:#858af0;background:#f2f2ff}
+.page.dragging{opacity:.45;cursor:grabbing}
+.page.drop-target{border-color:#4f46e5;border-style:dashed;background:#eef2ff}
+.page span{
+  width:24px;height:24px;border-radius:7px;
+  background:#eef2ff;display:grid;place-items:center;
+  font-weight:900;font-size:11px;flex:0 0 auto;color:#4338ca;
+}
+.page div{min-width:0;flex:1}
+.page b{
+  font-size:11px;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;
+}
+.page small{font-size:9px;color:var(--muted)}
+.page .rm{
+  padding:3px 7px;border:0;border-radius:7px;
+  background:#fff0f2;color:#b8243d;
+  font-weight:900;font-size:12px;cursor:pointer;
+}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .right{border-left:0;border-top:1px solid var(--line)}
+  .output-box{height:200px}
+  .slider-line{grid-template-columns:100px 1fr}
+}
+</style>
 </head>
 <body>
 
-    <!-- Toolbar -->
-    <header id="toolbar">
-        <div class="toolbar-group toolbar-main">
-            <button id="btn-open" class="btn btn-primary" title="باز کردن تصویر (Ctrl+O)">
-                <span class="btn-emoji">📂</span>
-                <span class="btn-label">باز کردن</span>
-            </button>
+<header class="toolbar">
+  <div class="tb-tools">
+    <label class="tbtn primary">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+      <span>📂 باز کردن</span>
+    </label>
+    <button class="tbtn" id="rotLBtn" onclick="rotateLeft()" disabled>↶ چپ</button>
+    <button class="tbtn" id="rotRBtn" onclick="rotateRight()" disabled>↷ راست</button>
+    <button class="tbtn" id="flipHBtn" onclick="flipH()" disabled>⇄ افقی</button>
+    <button class="tbtn" id="flipVBtn" onclick="flipV()" disabled>⇅ عمودی</button>
+    <button class="tbtn" id="resetBtn" onclick="resetCorners()" disabled>▣ بازنشانی</button>
+    <button class="tbtn" id="zoomResetBtn" onclick="zoomReset()" disabled>🔍 بازنشانی زوم</button>
+    <button class="tbtn" id="zoomFitBtn" onclick="zoomFitPoints()" disabled>🎯 زوم روی نقاط</button>
+  </div>
+
+  <div class="tb-right">
+    <button class="tbtn" id="dlJpg" onclick="downloadImage('jpg')" disabled>JPG</button>
+    <button class="tbtn" id="dlPng" onclick="downloadImage('png')" disabled>PNG</button>
+    <button class="tbtn" id="dlPdf" onclick="downloadPdf()" disabled>📄 PDF</button>
+    <button class="tbtn" id="printBtn" onclick="printPdf()" disabled>🖨️ پرینت</button>
+    <button class="tbtn danger" id="closeBtn" onclick="closeAll()" disabled>✕ بستن</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="left">
+    <div class="canvas-shell" id="shell">
+      <div class="empty" id="empty">
+        <div class="empty-inner">
+          <div class="empty-icon">📄</div>
+          <div class="empty-title">یک یا چند عکس انتخاب کنید</div>
+          <div class="empty-sub">یا فایل‌ها را اینجا رها کنید (Drag &amp; Drop)</div>
+          <button type="button" class="empty-btn" onclick="document.getElementById('fileInput').click()">
+            📂 باز کردن فایل
+          </button>
         </div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap" style="display:none">
+        <canvas id="sourceCanvas"></canvas>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+      <div class="hint">
+        <span class="hint-line">💡 کلیک روی لبه = نقطه</span>
+        <span class="hint-line">   راست‌کلیک = حذف</span>
+      </div>
+    </div>
+  </section>
 
-        <div class="toolbar-divider"></div>
-
-        <div class="toolbar-group toolbar-edit">
-            <button id="btn-undo" class="btn" title="بازگشت (Ctrl+Z)" disabled>
-                <span class="btn-emoji">↩️</span>
-            </button>
-            <button id="btn-redo" class="btn" title="دوباره (Ctrl+Y)" disabled>
-                <span class="btn-emoji">↪️</span>
-            </button>
+  <aside class="right">
+    <div class="right-top">
+      <div class="panel">
+        <div class="slider-line">
+          <span class="lbl">کیفیت: <b id="qualityValue">100</b></span>
+          <input type="range" id="qualitySlider" min="1" max="100" value="100"
+                 oninput="onQualityInput()" onchange="onQualityChange()">
         </div>
-
-        <div class="toolbar-divider"></div>
-
-        <div class="toolbar-group toolbar-transform">
-			<button id="btn-rotate-cw" class="btn" title="چرخش ساعت‌گرد (R)" disabled>
-				<span class="btn-emoji mirrored">🔄</span>
-				<span class="btn-label">چرخش ساعتگرد</span>
-			</button>
-
-			<button id="btn-rotate-ccw" class="btn" title="چرخش پادساعت‌گرد (Shift+R)" disabled>
-				<span class="btn-emoji">🔄</span>
-				<span class="btn-label">چرخش پادساعتگرد</span>
-			</button>
-            <button id="btn-flip-h" class="btn" title="آینه افقی (H)" disabled>
-                <span class="btn-emoji">↔️</span>
-                <span class="btn-label">آیینه افقی</span>
-            </button>
-            <button id="btn-flip-v" class="btn" title="آینه عمودی (V)" disabled>
-                <span class="btn-emoji">↕️</span>
-                <span class="btn-label">آیینه عمودی</span>
-            </button>
+        <div class="slider-line">
+          <span class="lbl">ابعاد: <b id="sizeValue">100</b></span>
+          <input type="range" id="sizeSlider" min="1" max="100" value="100"
+                 oninput="onSizeInput()" onchange="onSizeChange()">
         </div>
-
-        <div class="toolbar-divider"></div>
-
-        <div class="toolbar-group toolbar-crop">
-            <button id="btn-detect" class="btn btn-accent" title="تشخیص خودکار گوشه‌ها (D)" disabled>
-                <span class="btn-emoji">🔍</span>
-                <span class="btn-label">تشخیص</span>
-            </button>
-            <button id="btn-fit-corners" class="btn" title="نمایش نقاط در وسط صفحه" disabled>
-                <span class="btn-emoji">📐</span>
-                <span class="btn-label">نمایش نقاط</span>
-            </button>
+        <div class="badges-line">
+          <span class="badge badge-dim" id="outputDim">—</span>
+          <span class="badge badge-size" id="outputSize">—</span>
         </div>
-
-        <div class="toolbar-divider"></div>
-
-        <div class="toolbar-group toolbar-view">
-            <button id="btn-fit" class="btn" title="متناسب با صفحه (F)" disabled>
-                <span class="btn-emoji">👁️</span>
-                <span class="btn-label">متناسب</span>
-            </button>
-            <button id="btn-reset" class="btn" title="اندازه واقعی (0)" disabled>
-                <span class="btn-label">۱:۱</span>
-            </button>
-            <span id="zoom-display" class="zoom-label">۱۰۰٪</span>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <div class="output-box" id="outputBox">
+          <div class="output-empty" id="outputEmpty">پیش‌نمایش خروجی</div>
+          <div class="output-canvas-wrap" id="outputCanvasWrap">
+            <canvas id="outputCanvas"></canvas>
+          </div>
+          <div class="output-zoom-hint">🔍 اسکرول = زوم • دابل‌کلیک = بازنشانی</div>
         </div>
-
-        <div style="flex:1"></div>
-
-        <div class="toolbar-group toolbar-help">
-            <button id="btn-help" class="btn btn-ghost" title="میانبرهای صفحه‌کلید (?)">
-                <span class="btn-emoji">❓</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <div id="main-content">
-        <!-- Canvas (2/3) -->
-        <main id="canvas-container">
-            <canvas id="main-canvas"></canvas>
-
-            <!-- Drop overlay -->
-            <div id="drop-overlay" class="hidden">
-                <div class="drop-message">
-                    <span style="font-size:48px;">📂</span>
-                    <p>تصویر را اینجا رها کنید</p>
-                </div>
-            </div>
-
-            <!-- Welcome -->
-            <div id="welcome-message">
-                <div class="welcome-content">
-                    <div class="welcome-icon" style="font-size:64px;">🖼️</div>
-                    <h1>ابزار برش پرسپکتیو</h1>
-                    <p>یک تصویر باز کنید تا شروع کنید</p>
-                    <div class="welcome-options">
-                        <button id="btn-welcome-open" class="btn btn-primary btn-large">
-                            <span class="btn-emoji">📂</span>
-                            انتخاب تصویر
-                        </button>
-                        <p class="hint">یا تصویر را بکشید و رها کنید، یا Ctrl+V بزنید</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Loading overlay -->
-            <div id="loading-overlay" class="hidden">
-                <div class="loading-spinner"></div>
-                <p id="loading-text">در حال پردازش...</p>
-            </div>
-        </main>
-
-
-
-		<!-- Preview Panel (1/3) -->
-		<aside id="preview-panel">
-			<div class="preview-panel-header">
-				<span class="panel-icon" style="font-size:18px;">📋</span>
-				<span>پیش‌نمایش خروجی</span>
-			</div>
-			<div class="preview-panel-body">
-				<canvas id="live-preview-canvas"></canvas>
-				<div id="preview-placeholder" class="preview-empty">
-					<span style="font-size:40px;">🖼️</span>
-					<p>ابتدا یک تصویر بارگذاری کنید</p>
-				</div>
-			</div>
-
-			<!-- Export Controls -->
-			<div class="preview-panel-footer" id="export-controls">
-				<!-- اسلایدر کیفیت -->
-				<div class="export-field full-width">
-					<label for="export-quality">🎨 کیفیت:</label>
-					<input type="range" id="export-quality" min="1" max="100" value="100">
-					<span id="quality-value">100٪</span>
-				</div>
-
-				<!-- اسلایدر مقیاس -->
-				<div class="export-field full-width">
-					<label for="export-scale">📏 ابعاد:</label>
-					<input type="range" id="export-scale" min="25" max="100" value="100">
-					<span id="scale-value">۱۰۰٪</span>
-				</div>
-
-				<!-- ردیف فرمت و دکمه ذخیره -->
-				<div class="export-actions">
-					<div class="export-field">
-						<label for="export-format">📁 فرمت:</label>
-						<select id="export-format">
-							<option value="jpeg" selected>JPEG</option>
-							<option value="png">PNG</option>
-						</select>
-					</div>
-					<button id="btn-export-save" class="btn btn-success btn-save">
-						<span class="btn-emoji">💾</span>
-						ذخیره
-					</button>
-				</div>
-
-				<!-- باکس گزارش خروجی -->
-				<div id="export-info" class="export-info">
-					📂 تصویری بارگذاری نشده است.
-				</div>
-			</div>
-		</aside>
-		
+      </div>
     </div>
 
-    <!-- Help modal -->
-    <div id="help-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>⌨️ میانبرهای صفحه‌کلید</h2>
-                <button id="btn-help-close" class="btn-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <table class="shortcuts-table">
-                    <thead><tr><th>میانبر</th><th>عملیات</th></tr></thead>
-                    <tbody>
-                        <tr><td><kbd>Ctrl+O</kbd></td><td>باز کردن تصویر</td></tr>
-                        <tr><td><kbd>Ctrl+S</kbd></td><td>ذخیره تصویر</td></tr>
-                        <tr><td><kbd>Ctrl+Z</kbd></td><td>بازگشت</td></tr>
-                        <tr><td><kbd>Ctrl+Y</kbd></td><td>دوباره</td></tr>
-                        <tr><td><kbd>R</kbd></td><td>چرخش ۹۰° ساعت‌گرد</td></tr>
-                        <tr><td><kbd>Shift+R</kbd></td><td>چرخش ۹۰° پادساعت‌گرد</td></tr>
-                        <tr><td><kbd>H</kbd></td><td>آینه افقی</td></tr>
-                        <tr><td><kbd>V</kbd></td><td>آینه عمودی</td></tr>
-                        <tr><td><kbd>D</kbd></td><td>تشخیص خودکار گوشه‌ها</td></tr>
-                        <tr><td><kbd>F</kbd></td><td>متناسب با صفحه</td></tr>
-                        <tr><td><kbd>0</kbd></td><td>اندازه واقعی ۱۰۰٪</td></tr>
-                        <tr><td><kbd>+</kbd> / <kbd>=</kbd></td><td>بزرگ‌نمایی</td></tr>
-                        <tr><td><kbd>-</kbd></td><td>کوچک‌نمایی</td></tr>
-                        <tr><td><kbd>Space + کشیدن</kbd></td><td>جابجایی صفحه</td></tr>
-                        <tr><td><kbd>وسط ماوس + کشیدن</kbd></td><td>جابجایی صفحه</td></tr>
-                        <tr><td><kbd>اسکرول ماوس</kbd></td><td>بزرگ/کوچک‌نمایی</td></tr>
-                        <tr><td><kbd>Ctrl+V</kbd></td><td>جای‌گذاری از کلیپ‌بورد</td></tr>
-                        <tr><td><kbd>Escape</kbd></td><td>انصراف / بستن</td></tr>
-                    </tbody>
-                </table>
-            </div>
+    <div class="right-scroll">
+      <div class="panel">
+        <div class="field-row">
+          <div class="field">
+            <label>حالت تصویر</label>
+            <select id="mode" onchange="onModeChange()" disabled>
+              <option value="none">بدون تغییر</option>
+              <option value="enhanced" selected>بهبود هوشمند</option>
+              <option value="color">رنگی</option>
+              <option value="gray">خاکستری</option>
+              <option value="print">پرینت</option>
+              <option value="bw">سیاه و سفید سندی</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>اندازه PDF</label>
+            <select id="paper">
+              <option value="a4-portrait" selected>A4 عمودی</option>
+              <option value="a4-landscape">A4 افقی</option>
+              <option value="a5-portrait">A5 عمودی</option>
+              <option value="a5-landscape">A5 افقی</option>
+            </select>
+          </div>
+          <label class="invert-toggle" id="invertLabel">
+            <input type="checkbox" id="invertToggle" onchange="onInvertChange()">
+            <span>رنگ معکوس</span>
+          </label>
         </div>
+      </div>
+
+      <div class="panel" id="enhancePanel">
+        <div class="slider-line">
+          <span class="lbl">شدت بهبود: <b id="enhanceValue">100</b></span>
+          <input type="range" id="enhanceIntensity" min="1" max="100" value="100"
+                 oninput="onEnhanceInput()" onchange="onSliderApply()" disabled>
+        </div>
+      </div>
+
+      <div class="panel" id="grayPanel">
+        <div class="slider-line">
+          <span class="lbl">میزان خاکستری: <b id="grayValue">100</b></span>
+          <input type="range" id="grayIntensity" min="1" max="100" value="100"
+                 oninput="onGrayInput()" onchange="onSliderApply()" disabled>
+        </div>
+      </div>
+
+      <div class="panel" id="whitenPanel">
+        <div class="slider-line">
+          <span class="lbl">سفیدی کاغذ: <b id="whitenValue">100</b></span>
+          <input type="range" id="whitenIntensity" min="1" max="100" value="100"
+                 oninput="onWhitenInput()" onchange="onSliderApply()" disabled>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>صفحه‌ها (برای جابه‌جایی، بکشید)</h3>
+        <div class="pages" id="pages"></div>
+      </div>
     </div>
+  </aside>
+</main>
 
-    <!-- Hidden file input -->
-    <input type="file" id="file-input" accept="image/*" hidden>
+<script>
+const $ = id => document.getElementById(id);
+let pages = [], current = -1, busy = false;
+let drag = null, dragSrcIndex = -1, suppressClick = false;
+let hoverEdge = -1, hoverPos = null;
+let panState = null;
+let zoom = { scale: 1, x: 0, y: 0 };
+const EDGE_SAMPLES = 120;
 
-    <!-- Status Bar -->
-    <footer id="status-bar">
-        <span id="status-zoom" class="status-item">زوم: ۱۰۰٪</span>
-        <span class="status-sep">│</span>
-        <span id="status-image-size" class="status-item">ابعاد: —</span>
-        <span class="status-sep">│</span>
-        <span id="status-crop-size" class="status-item">برش: —</span>
-        <span class="status-sep">│</span>
-        <span id="status-mouse" class="status-item">موقعیت: —</span>
-        <span style="flex:1"></span>
-        <span id="status-opencv" class="status-item status-indicator">
-            <span class="indicator-dot" id="opencv-indicator"></span>
-            OpenCV: در حال بارگذاری...
-        </span>
-    </footer>
+// Output preview zoom state
+let outView = { scale: 1, x: 0, y: 0, minScale: 1 };
+let outPanState = null;
+let prevOutKey = '';
 
-    <!-- Scripts -->
-    <script src="js/utils.js"></script>
-    <script src="js/canvas.js"></script>
-    <script src="js/viewport.js"></script>
-    <script src="js/imageLoader.js"></script>
-    <script src="js/handles.js"></script>
-    <script src="js/crop.js"></script>
-    <script src="js/history.js"></script>
-    <script src="js/export.js"></script>
-    <script src="js/detect.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="script.js"></script>
+const source  = $('sourceCanvas');
+const overlay = $('overlay');
+const out     = $('outputCanvas');
+const outWrap = $('outputCanvasWrap');
+const sctx    = source.getContext('2d', { willReadFrequently: true });
+const octx    = overlay.getContext('2d');
+const outctx  = out.getContext('2d', { willReadFrequently: true });
+
+/* ---------------- Sliders mapping ---------------- */
+function getQuality(){
+  const v = Number($('qualitySlider').value);
+  return 0.5 + (v - 1) / 99 * 0.49;
+}
+function getMaxDim(){
+  const v = Number($('sizeSlider').value);
+  const raw = 300 + (v - 1) * 37.37;
+  return Math.round(raw / 50) * 50;
+}
+function onQualityInput(){ $('qualityValue').textContent = $('qualitySlider').value; }
+function onQualityChange(){ scheduleUpdateOutputInfo(); }
+function onSizeInput(){ $('sizeValue').textContent = $('sizeSlider').value; }
+function onSizeChange(){ processCurrent(); }
+
+function onEnhanceInput(){ $('enhanceValue').textContent = $('enhanceIntensity').value; }
+function onGrayInput(){ $('grayValue').textContent = $('grayIntensity').value; }
+function onWhitenInput(){ $('whitenValue').textContent = $('whitenIntensity').value; }
+function onSliderApply(){ processCurrent(); }
+function onInvertChange(){
+  $('invertLabel').classList.toggle('active', $('invertToggle').checked);
+  processCurrent();
+}
+
+/* ---------------- Paper size ---------------- */
+function getPaperSize(){
+  const v = $('paper').value;
+  const A4W = 595.28, A4H = 841.89;
+  const A5W = 419.53, A5H = 595.28;
+  switch (v){
+    case 'a4-landscape': return { W: A4H, H: A4W, name: 'A4 landscape' };
+    case 'a5-portrait':  return { W: A5W, H: A5H, name: 'A5 portrait' };
+    case 'a5-landscape': return { W: A5H, H: A5W, name: 'A5 landscape' };
+    case 'a4-portrait':
+    default:             return { W: A4W, H: A4H, name: 'A4 portrait' };
+  }
+}
+
+/* ---------------- UI helpers ---------------- */
+function refreshControls(){
+  const hasPage = current >= 0;
+  const locked = busy;
+  ['rotLBtn','rotRBtn','flipHBtn','flipVBtn','resetBtn','zoomResetBtn','zoomFitBtn'].forEach(id => $(id).disabled = locked || !hasPage);
+  $('mode').disabled = locked || !hasPage;
+  $('invertToggle').disabled = locked || !hasPage;
+  ['dlJpg','dlPng','dlPdf','printBtn'].forEach(id => $(id).disabled = locked || !hasPage);
+  $('closeBtn').disabled = locked || !pages.length;
+  document.querySelectorAll('#pages .page').forEach(el => {
+    el.setAttribute('draggable', (!locked && hasPage) ? 'true' : 'false');
+  });
+  ['enhanceIntensity','grayIntensity','whitenIntensity'].forEach(id => $(id).disabled = locked || !hasPage);
+  updateSlidersVisibility();
+}
+function updateSlidersVisibility(){
+  const mode = $('mode').value;
+  $('enhancePanel').style.display = (mode === 'none' || mode === 'color') ? 'none' : '';
+  $('grayPanel').style.display    = (mode === 'none' || mode === 'gray' || mode === 'bw' || mode === 'print') ? 'none' : '';
+  $('whitenPanel').style.display  = (mode === 'none' || mode === 'bw') ? 'none' : '';
+}
+function nextPaint(){ return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }
+function onModeChange(){ updateSlidersVisibility(); processCurrent(); }
+
+/* ---------------- File input + drop zone ---------------- */
+$('fileInput').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  if (files.length) await addFiles(files);
+  e.target.value = '';
+});
+
+async function addFiles(files){
+  const before = pages.length;
+  for (const f of files){
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) continue;
+    const img = await loadImage(f);
+    pages.push({ name: f.name, img, rotation: 0, flipH: false, flipV: false, corners: null, midpoints: [] });
+  }
+  const added = pages.length - before;
+  if (!added){
+    setStatus?.('فایل معتبری پیدا نشد.', true);
+    return;
+  }
+  renderPages();
+  if (current < 0 && pages.length) selectPage(0);
+  else if (added > 0) drawSource();
+}
+function loadImage(file){
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file), i = new Image();
+    i.onload  = () => { URL.revokeObjectURL(u); res(i); };
+    i.onerror = () => { URL.revokeObjectURL(u); rej(new Error('تصویر خوانده نشد')); };
+    i.src = u;
+  });
+}
+
+/* Drag & drop on the whole shell */
+(function setupDropZone(){
+  const shell = $('shell');
+  let dragDepth = 0;
+
+  function reset(){ dragDepth = 0; shell.classList.remove('drag-over'); }
+
+  shell.addEventListener('dragenter', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth++;
+    shell.classList.add('drag-over');
+  });
+  shell.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    try { e.dataTransfer.dropEffect = 'copy'; } catch(_){}
+  });
+  shell.addEventListener('dragleave', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth--;
+    if (dragDepth <= 0) reset();
+  });
+  shell.addEventListener('drop', async e => {
+    e.preventDefault();
+    e.stopPropagation();
+    reset();
+    const files = [...(e.dataTransfer?.files || [])];
+    if (files.length) await addFiles(files);
+  });
+
+  // Prevent browser from opening dropped files elsewhere
+  window.addEventListener('dragover', e => { e.preventDefault(); }, false);
+  window.addEventListener('drop', e => { e.preventDefault(); reset(); }, false);
+  window.addEventListener('dragend', reset);
+  window.addEventListener('blur', reset);
+})();
+
+/* ---------------- Pages + drag&drop ---------------- */
+function renderPages(){
+  const pagesEl = $('pages');
+  pagesEl.innerHTML = pages.map((p, i) =>
+    `<div class="page ${i===current?'active':''}" draggable="true" data-index="${i}">
+       <span>${i+1}</span>
+       <div><b>${escapeHtml(p.name)}</b><small>${pageSubtitle(p)}</small></div>
+       <button class="rm" data-rm="${i}" type="button">×</button>
+     </div>`).join('');
+  pagesEl.querySelectorAll('.page').forEach(el => {
+    el.addEventListener('click', onPageClick);
+    el.addEventListener('dragstart', onPageDragStart);
+    el.addEventListener('dragover', onPageDragOver);
+    el.addEventListener('dragleave', onPageDragLeave);
+    el.addEventListener('drop', onPageDrop);
+    el.addEventListener('dragend', onPageDragEnd);
+  });
+  pagesEl.querySelectorAll('.rm').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      removePage(Number(btn.dataset.rm));
+    });
+  });
+  refreshControls();
+}
+function onPageClick(e){
+  if (suppressClick) return;
+  if (e.target.classList.contains('rm')) return;
+  selectPage(Number(this.dataset.index));
+}
+function onPageDragStart(e){
+  dragSrcIndex = Number(this.dataset.index);
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(dragSrcIndex)); } catch(_){}
+}
+function onPageDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const idx = Number(this.dataset.index);
+  if (idx !== dragSrcIndex) this.classList.add('drop-target');
+}
+function onPageDragLeave(){ this.classList.remove('drop-target'); }
+function onPageDrop(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const to = Number(this.dataset.index);
+  if (dragSrcIndex < 0 || dragSrcIndex === to) return;
+  const [moved] = pages.splice(dragSrcIndex, 1);
+  if (dragSrcIndex === current) current = to;
+  else {
+    if (dragSrcIndex < current) current--;
+    if (to <= current) current++;
+  }
+  pages.splice(to, 0, moved);
+  dragSrcIndex = -1;
+  suppressClick = true;
+  setTimeout(() => { suppressClick = false; }, 250);
+  renderPages();
+  drawSource();
+}
+function onPageDragEnd(){
+  dragSrcIndex = -1;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('dragging','drop-target'));
+}
+function pageSubtitle(p){
+  const parts = [];
+  if (p.rotation) parts.push(`چرخش ${p.rotation}°`);
+  if (p.flipH) parts.push('آینه افقی');
+  if (p.flipV) parts.push('آینه عمودی');
+  return parts.length ? parts.join(' • ') : 'آماده';
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+function removePage(i){
+  pages.splice(i, 1);
+  if (!pages.length){ closeAll(); return; }
+  selectPage(Math.min(i, pages.length - 1));
+  renderPages();
+  refreshControls();
+}
+function selectPage(i){
+  if (i < 0 || i >= pages.length) return;
+  current = i;
+  hoverEdge = -1; hoverPos = null; drag = null;
+  prevOutKey = '';
+  drawSource();
+  renderPages();
+  refreshControls();
+}
+function closeAll(){
+  pages = []; current = -1;
+  drag = null; hoverEdge = -1; hoverPos = null; panState = null;
+  outPanState = null;
+  source.width = overlay.width = 1;
+  source.height = overlay.height = 1;
+  $('canvasWrap').style.display = 'none';
+  $('empty').style.display = 'grid';
+  $('outputBox').classList.remove('has-output');
+  $('outputBox').classList.remove('panning');
+  out.width = out.height = 1;
+  $('outputDim').textContent = '—';
+  $('outputSize').textContent = '—';
+  prevOutKey = '';
+  renderPages();
+  refreshControls();
+}
+
+/* ---------------- Initial corners ---------------- */
+function initialCorners(){
+  const m = Math.max(8, Math.round(Math.min(source.width, source.height) * .035));
+  return [
+    {x:m, y:m},
+    {x:source.width - m, y:m},
+    {x:source.width - m, y:source.height - m},
+    {x:m, y:source.height - m}
+  ];
+}
+
+/* ---------------- Source canvas ---------------- */
+function drawSource(){
+  const p = pages[current], img = p.img;
+  const rot = p.rotation % 360;
+  const swap = rot === 90 || rot === 270;
+  const w = swap ? img.naturalHeight : img.naturalWidth;
+  const h = swap ? img.naturalWidth  : img.naturalHeight;
+  const max = 1800, sc = Math.min(1, max / Math.max(w, h));
+  source.width  = overlay.width  = Math.round(w * sc);
+  source.height = overlay.height = Math.round(h * sc);
+  sctx.save();
+  sctx.clearRect(0, 0, source.width, source.height);
+  sctx.translate(source.width / 2, source.height / 2);
+  sctx.rotate(rot * Math.PI / 180);
+  sctx.scale(p.flipH ? -1 : 1, p.flipV ? -1 : 1);
+  const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+  sctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+  sctx.restore();
+  $('empty').style.display = 'none';
+  $('canvasWrap').style.display = 'block';
+  if (!p.corners) p.corners = initialCorners();
+  if (!p.midpoints) p.midpoints = [];
+  drawOverlay();
+  fitToShell();
+  processCurrent();
+}
+
+/* ---------------- Zoom (source) ---------------- */
+function applyZoom(){
+  const w = source.width * zoom.scale;
+  const h = source.height * zoom.scale;
+  $('canvasWrap').style.width  = w + 'px';
+  $('canvasWrap').style.height = h + 'px';
+  $('canvasWrap').style.transform = `translate(${zoom.x}px, ${zoom.y}px)`;
+}
+function fitToShell(){
+  if (current < 0) return;
+  const sw = $('shell').clientWidth;
+  const sh = $('shell').clientHeight;
+  if (!sw || !sh) return;
+  const scale = Math.min(sw / source.width, sh / source.height, 1);
+  const dispW = source.width * scale;
+  const dispH = source.height * scale;
+  zoom.scale = scale;
+  zoom.x = (sw - dispW) / 2;
+  zoom.y = (sh - dispH) / 2;
+  applyZoom();
+}
+function zoomAt(sx, sy, newScale){
+  const oldScale = zoom.scale;
+  const px = (sx - zoom.x) / oldScale;
+  const py = (sy - zoom.y) / oldScale;
+  zoom.scale = newScale;
+  zoom.x = sx - px * newScale;
+  zoom.y = sy - py * newScale;
+  applyZoom();
+}
+function zoomReset(){ if (current >= 0) fitToShell(); }
+function zoomFitPoints(){
+  if (current < 0) return;
+  const c = pages[current].corners;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of c){
+    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+    maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+  }
+  const bw = Math.max(1, maxX - minX), bh = Math.max(1, maxY - minY);
+  const sw = $('shell').clientWidth, sh = $('shell').clientHeight;
+  const pad = 30;
+  const scale = Math.min((sw - pad*2) / bw, (sh - pad*2) / bh);
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  zoom.scale = scale;
+  zoom.x = sw / 2 - cx * scale;
+  zoom.y = sh / 2 - cy * scale;
+  applyZoom();
+}
+$('shell').addEventListener('wheel', e => {
+  if (current < 0) return;
+  e.preventDefault();
+  const r = $('shell').getBoundingClientRect();
+  const sx = e.clientX - r.left;
+  const sy = e.clientY - r.top;
+  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  const newScale = Math.max(0.05, Math.min(30, zoom.scale * factor));
+  zoomAt(sx, sy, newScale);
+  hoverEdge = -1; hoverPos = null;
+  drawOverlay();
+}, { passive: false });
+
+/* ---------------- Output preview zoom ---------------- */
+function applyOutView(){
+  out.style.transform = `translate(${outView.x}px, ${outView.y}px) scale(${outView.scale})`;
+}
+function fitOutView(){
+  if (current < 0 || !out.width || !out.height) return;
+  const box = $('outputBox');
+  const boxW = box.clientWidth;
+  const boxH = box.clientHeight;
+  if (!boxW || !boxH) return;
+  const cw = out.width, ch = out.height;
+  outView.minScale = Math.min(boxW / cw, boxH / ch);
+  outView.scale = outView.minScale;
+  outView.x = (boxW - cw * outView.scale) / 2;
+  outView.y = (boxH - ch * outView.scale) / 2;
+  applyOutView();
+}
+$('outputCanvasWrap').addEventListener('wheel', e => {
+  if (current < 0 || !out.width) return;
+  e.preventDefault();
+  const r = outWrap.getBoundingClientRect();
+  const mx = e.clientX - r.left;
+  const my = e.clientY - r.top;
+  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  let newScale = outView.scale * factor;
+  if (newScale < outView.minScale) newScale = outView.minScale;
+  if (newScale > outView.minScale * 25) newScale = outView.minScale * 25;
+
+  const px = (mx - outView.x) / outView.scale;
+  const py = (my - outView.y) / outView.scale;
+  outView.scale = newScale;
+
+  if (newScale <= outView.minScale * 1.001){
+    const boxW = $('outputBox').clientWidth;
+    const boxH = $('outputBox').clientHeight;
+    outView.x = (boxW - out.width * outView.scale) / 2;
+    outView.y = (boxH - out.height * outView.scale) / 2;
+  } else {
+    outView.x = mx - px * newScale;
+    outView.y = my - py * newScale;
+  }
+  applyOutView();
+}, { passive: false });
+
+$('outputCanvasWrap').addEventListener('pointerdown', e => {
+  if (current < 0 || !out.width) return;
+  if (outView.scale <= outView.minScale * 1.001) return;
+  if (e.button !== 0 && e.button !== 1) return;
+  e.preventDefault();
+  outPanState = {
+    startX: e.clientX, startY: e.clientY,
+    startViewX: outView.x, startViewY: outView.y
+  };
+  $('outputCanvasWrap').setPointerCapture(e.pointerId);
+  $('outputBox').classList.add('panning');
+});
+$('outputCanvasWrap').addEventListener('pointermove', e => {
+  if (!outPanState) return;
+  outView.x = outPanState.startViewX + (e.clientX - outPanState.startX);
+  outView.y = outPanState.startViewY + (e.clientY - outPanState.startY);
+  applyOutView();
+});
+$('outputCanvasWrap').addEventListener('pointerup', () => {
+  if (outPanState){
+    outPanState = null;
+    $('outputBox').classList.remove('panning');
+  }
+});
+$('outputCanvasWrap').addEventListener('pointercancel', () => {
+  outPanState = null;
+  $('outputBox').classList.remove('panning');
+});
+$('outputCanvasWrap').addEventListener('dblclick', () => {
+  fitOutView();
+});
+
+window.addEventListener('resize', () => {
+  fitToShell();
+  if (current >= 0) fitOutView();
+});
+
+/* ---------------- Coons Patch ---------------- */
+function midpointWorldPos(page, mp){
+  const c = page.corners;
+  const start = c[mp.edge];
+  const end   = c[(mp.edge + 1) % 4];
+  const dx = end.x - start.x, dy = end.y - start.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  return { x: start.x + dx * mp.t + nx * mp.n, y: start.y + dy * mp.t + ny * mp.n };
+}
+function worldPosToLocal(page, edge, x, y){
+  const c = page.corners;
+  const start = c[edge];
+  const end   = c[(edge + 1) % 4];
+  const dx = end.x - start.x, dy = end.y - start.y;
+  const len2 = dx * dx + dy * dy || 1;
+  const len  = Math.sqrt(len2);
+  const nx = -dy / len, ny = dx / len;
+  const relX = x - start.x, relY = y - start.y;
+  return { t: (relX * dx + relY * dy) / len2, n: relX * nx + relY * ny };
+}
+function edgesOf(page){
+  const c = page.corners;
+  const edges = [];
+  for (let e = 0; e < 4; e++){
+    const start = c[e];
+    const end   = c[(e + 1) % 4];
+    const mids = page.midpoints
+      .filter(m => m.edge === e)
+      .map(m => { const w = midpointWorldPos(page, m); return { x: w.x, y: w.y, t: m.t }; })
+      .sort((a, b) => a.t - b.t);
+    edges.push([
+      { x: start.x, y: start.y, t: 0 },
+      ...mids,
+      { x: end.x,   y: end.y,   t: 1 }
+    ]);
+  }
+  return edges;
+}
+function sampleEdge(pts, t){
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < pts.length - 1; i++){
+    const t0 = pts[i].t, t1 = pts[i + 1].t;
+    if (t >= t0 && t <= t1){
+      const range = t1 - t0;
+      const lt = range > 1e-9 ? (t - t0) / range : 0;
+      return {
+        x: pts[i].x + (pts[i + 1].x - pts[i].x) * lt,
+        y: pts[i].y + (pts[i + 1].y - pts[i].y) * lt
+      };
+    }
+  }
+  const last = pts[pts.length - 1];
+  return { x: last.x, y: last.y };
+}
+function sampleFast(sampled, t){
+  const n = sampled.length - 1;
+  const scaled = Math.max(0, Math.min(1, t)) * n;
+  let i = Math.floor(scaled);
+  if (i >= n) i = n - 1;
+  const lt = scaled - i;
+  return {
+    x: sampled[i].x + (sampled[i + 1].x - sampled[i].x) * lt,
+    y: sampled[i].y + (sampled[i + 1].y - sampled[i].y) * lt
+  };
+}
+function coonsPoint(sampled, u, v, corners){
+  const top    = sampleFast(sampled[0], u);
+  const right  = sampleFast(sampled[1], v);
+  const bottom = sampleFast(sampled[2], 1 - u);
+  const left   = sampleFast(sampled[3], 1 - v);
+  const P00 = corners[0], P10 = corners[1], P11 = corners[2], P01 = corners[3];
+  const a = (1 - v) * top.x + v * bottom.x + (1 - u) * left.x + u * right.x;
+  const b = (1 - u) * (1 - v) * P00.x + u * (1 - v) * P10.x + u * v * P11.x + (1 - u) * v * P01.x;
+  const c = (1 - v) * top.y + v * bottom.y + (1 - u) * left.y + u * right.y;
+  const d = (1 - u) * (1 - v) * P00.y + u * (1 - v) * P10.y + u * v * P11.y + (1 - u) * v * P01.y;
+  return { x: a - b, y: c - d };
+}
+
+/* ---------------- Overlay ---------------- */
+function drawOverlay(){
+  if (current < 0) return;
+  const page = pages[current];
+  const edges = edgesOf(page);
+  const c = page.corners;
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  octx.lineWidth = Math.max(2, overlay.width / 500);
+  octx.strokeStyle = '#4f46e5';
+  octx.fillStyle = 'rgba(79,70,229,.10)';
+  const steps = 60;
+  octx.beginPath();
+  let first = true;
+  for (let e = 0; e < 4; e++){
+    const startI = e === 0 ? 0 : 1;
+    for (let i = startI; i <= steps; i++){
+      const p = sampleEdge(edges[e], i / steps);
+      if (first){ octx.moveTo(p.x, p.y); first = false; }
+      else octx.lineTo(p.x, p.y);
+    }
+  }
+  octx.closePath();
+  octx.fill();
+  octx.stroke();
+
+  const rMid = Math.max(9, overlay.width / 90);
+  page.midpoints.forEach((mp, i) => {
+    const w = midpointWorldPos(page, mp);
+    const active = drag && drag.type === 'midpoint' && drag.index === i;
+    octx.beginPath();
+    octx.arc(w.x, w.y, rMid, 0, Math.PI * 2);
+    octx.fillStyle = active ? '#7c3aed' : '#f59e0b';
+    octx.fill();
+    octx.strokeStyle = '#b45309';
+    octx.lineWidth = Math.max(2, overlay.width / 500);
+    octx.stroke();
+    octx.beginPath();
+    octx.arc(w.x, w.y, rMid * .35, 0, Math.PI * 2);
+    octx.fillStyle = '#fff';
+    octx.fill();
+  });
+
+  const rC = Math.max(9, overlay.width / 90);
+  c.forEach((p, i) => {
+    const active = drag && drag.type === 'corner' && drag.index === i;
+    octx.beginPath();
+    octx.arc(p.x, p.y, rC, 0, Math.PI * 2);
+    octx.fillStyle = active ? '#7c3aed' : '#fff';
+    octx.fill();
+    octx.strokeStyle = '#4f46e5';
+    octx.lineWidth = Math.max(2, overlay.width / 500);
+    octx.stroke();
+    octx.fillStyle = active ? '#fff' : '#4f46e5';
+    octx.font = `bold ${Math.max(10, overlay.width / 95)}px Tahoma, sans-serif`;
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    octx.fillText(String(i + 1), p.x, p.y);
+  });
+
+  if (hoverEdge >= 0 && hoverPos && !drag && !panState){
+    octx.beginPath();
+    octx.arc(hoverPos.x, hoverPos.y, Math.max(12, overlay.width / 75), 0, Math.PI * 2);
+    octx.fillStyle = 'rgba(16,185,129,.92)';
+    octx.fill();
+    octx.strokeStyle = '#047857';
+    octx.lineWidth = Math.max(2, overlay.width / 500);
+    octx.stroke();
+    octx.strokeStyle = '#fff';
+    octx.lineWidth = Math.max(2.5, overlay.width / 420);
+    const r = Math.max(5, overlay.width / 170);
+    octx.beginPath();
+    octx.moveTo(hoverPos.x - r, hoverPos.y);
+    octx.lineTo(hoverPos.x + r, hoverPos.y);
+    octx.moveTo(hoverPos.x, hoverPos.y - r);
+    octx.lineTo(hoverPos.x, hoverPos.y + r);
+    octx.stroke();
+  }
+}
+
+/* ---------------- Pointer (source) ---------------- */
+function pointerPos(e){
+  const r = overlay.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * overlay.width  / r.width,
+    y: (e.clientY - r.top ) * overlay.height / r.height
+  };
+}
+function findControlAt(page, x, y){
+  let best = null, minD = Infinity;
+  const cpR = Math.max(24, overlay.width / 22);
+  page.corners.forEach((c, i) => {
+    const d = Math.hypot(c.x - x, c.y - y);
+    if (d < minD){ minD = d; best = { type: 'corner', index: i }; }
+  });
+  page.midpoints.forEach((mp, i) => {
+    const w = midpointWorldPos(page, mp);
+    const d = Math.hypot(w.x - x, w.y - y);
+    if (d < minD){ minD = d; best = { type: 'midpoint', index: i }; }
+  });
+  return (best && minD < cpR) ? best : null;
+}
+function nearestEdgePoint(page, x, y){
+  const edges = edgesOf(page);
+  let best = { dist: Infinity, edge: -1, point: null };
+  const N = 70;
+  for (let e = 0; e < 4; e++){
+    for (let i = 0; i <= N; i++){
+      const p = sampleEdge(edges[e], i / N);
+      const d = Math.hypot(p.x - x, p.y - y);
+      if (d < best.dist) best = { dist: d, edge: e, point: p };
+    }
+  }
+  return best;
+}
+overlay.addEventListener('pointerdown', e => {
+  if (current < 0 || busy) return;
+  if (e.button === 1 || e.shiftKey){
+    e.preventDefault();
+    panState = { startX: e.clientX, startY: e.clientY, startZoomX: zoom.x, startZoomY: zoom.y };
+    overlay.setPointerCapture(e.pointerId);
+    overlay.style.cursor = 'grabbing';
+    return;
+  }
+  if (e.button !== 0) return;
+  overlay.setPointerCapture(e.pointerId);
+  const p = pointerPos(e);
+  const page = pages[current];
+  const ctrl = findControlAt(page, p.x, p.y);
+  if (ctrl){ drag = ctrl; drawOverlay(); return; }
+  if (hoverEdge >= 0 && hoverPos){
+    const loc = worldPosToLocal(page, hoverEdge, hoverPos.x, hoverPos.y);
+    loc.t = Math.max(0.04, Math.min(0.96, loc.t));
+    const tooClose = page.midpoints.some(m => m.edge === hoverEdge && Math.abs(m.t - loc.t) < 0.02);
+    if (!tooClose){
+      page.midpoints.push({ edge: hoverEdge, t: loc.t, n: loc.n });
+      hoverEdge = -1; hoverPos = null;
+      drawOverlay();
+      processCurrent();
+    }
+  }
+});
+overlay.addEventListener('pointermove', e => {
+  if (current < 0) return;
+  if (panState){
+    zoom.x = panState.startZoomX + (e.clientX - panState.startX);
+    zoom.y = panState.startZoomY + (e.clientY - panState.startY);
+    applyZoom();
+    return;
+  }
+  const p = pointerPos(e);
+  const page = pages[current];
+  if (drag){
+    const m = 2;
+    if (drag.type === 'corner'){
+      page.corners[drag.index] = {
+        x: Math.max(m, Math.min(source.width - m, p.x)),
+        y: Math.max(m, Math.min(source.height - m, p.y))
+      };
+    } else if (drag.type === 'midpoint'){
+      const mp = page.midpoints[drag.index];
+      const loc = worldPosToLocal(page, mp.edge, p.x, p.y);
+      mp.t = loc.t; mp.n = loc.n;
+    }
+    drawOverlay();
+    return;
+  }
+  const ctrl = findControlAt(page, p.x, p.y);
+  if (ctrl){
+    hoverEdge = -1; hoverPos = null;
+    overlay.style.cursor = 'grab';
+  } else {
+    const near = nearestEdgePoint(page, p.x, p.y);
+    const threshold = Math.max(28, overlay.width / 22);
+    if (near.dist < threshold && near.edge >= 0){
+      hoverEdge = near.edge; hoverPos = near.point;
+      overlay.style.cursor = 'copy';
+    } else {
+      hoverEdge = -1; hoverPos = null;
+      overlay.style.cursor = 'default';
+    }
+  }
+  drawOverlay();
+});
+overlay.addEventListener('pointerup', () => {
+  if (panState){ panState = null; overlay.style.cursor = 'default'; return; }
+  if (drag){ drag = null; drawOverlay(); processCurrent(); }
+});
+overlay.addEventListener('pointercancel', () => {
+  panState = null; drag = null;
+  overlay.style.cursor = 'default';
+  drawOverlay();
+});
+overlay.addEventListener('pointerleave', () => {
+  if (drag || panState) return;
+  hoverEdge = -1; hoverPos = null;
+  overlay.style.cursor = 'default';
+  drawOverlay();
+});
+overlay.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (current < 0 || busy) return;
+  const p = pointerPos(e);
+  const page = pages[current];
+  const r = Math.max(24, overlay.width / 22);
+  for (let i = 0; i < page.midpoints.length; i++){
+    const w = midpointWorldPos(page, page.midpoints[i]);
+    if (Math.hypot(w.x - p.x, w.y - p.y) < r){
+      page.midpoints.splice(i, 1);
+      drawOverlay();
+      processCurrent();
+      return;
+    }
+  }
+});
+
+/* ---------------- Rotate / Flip / Reset ---------------- */
+function rotateLeft(){
+  if (current < 0 || busy) return;
+  const p = pages[current];
+  p.rotation = (p.rotation - 90 + 360) % 360;
+  p.corners = null; p.midpoints = [];
+  drawSource(); renderPages();
+}
+function rotateRight(){
+  if (current < 0 || busy) return;
+  const p = pages[current];
+  p.rotation = (p.rotation + 90) % 360;
+  p.corners = null; p.midpoints = [];
+  drawSource(); renderPages();
+}
+function flipH(){
+  if (current < 0 || busy) return;
+  const p = pages[current];
+  p.flipH = !p.flipH; p.corners = null; p.midpoints = [];
+  drawSource(); renderPages();
+}
+function flipV(){
+  if (current < 0 || busy) return;
+  const p = pages[current];
+  p.flipV = !p.flipV; p.corners = null; p.midpoints = [];
+  drawSource(); renderPages();
+}
+function resetCorners(){
+  if (current < 0) return;
+  const p = pages[current];
+  p.corners = initialCorners();
+  p.midpoints = [];
+  drawOverlay();
+  processCurrent();
+}
+
+/* ---------------- Enhancement ---------------- */
+function percentile(hist, total, p){
+  const goal = total * p;
+  let sum = 0;
+  for (let i = 0; i < 256; i++){ sum += hist[i]; if (sum >= goal) return i; }
+  return 255;
+}
+function autoLevels(img, gamma){
+  const d = img.data, hist = new Uint32Array(256);
+  let samples = 0, br = 0, bg = 0, bb = 0, bright = 0;
+  for (let i = 0; i < d.length; i += 8){
+    const y = Math.max(0, Math.min(255, Math.round(.299 * d[i] + .587 * d[i+1] + .114 * d[i+2])));
+    hist[y]++; samples++;
+    if (y > 155){ br += d[i]; bg += d[i+1]; bb += d[i+2]; bright++; }
+  }
+  let lo = percentile(hist, samples, .012), hi = percentile(hist, samples, .992);
+  if (hi - lo < 70){ lo = Math.max(0, lo - 25); hi = Math.min(255, hi + 25); }
+  const span = Math.max(60, hi - lo);
+  const avg = bright ? ((br + bg + bb) / (3 * bright)) : 1;
+  const gains = bright ? [
+    Math.max(.9, Math.min(1.1, avg / (br / bright || avg))),
+    Math.max(.9, Math.min(1.1, avg / (bg / bright || avg))),
+    Math.max(.9, Math.min(1.1, avg / (bb / bright || avg)))
+  ] : [1, 1, 1];
+  for (let i = 0; i < d.length; i += 4){
+    for (let k = 0; k < 3; k++){
+      let v = d[i + k] * gains[k];
+      let n = Math.max(0, Math.min(1, (v - lo) / span));
+      n = Math.pow(n, gamma);
+      v = n * 255;
+      if (v > 215) v += Math.min(12, (v - 215) * .18);
+      d[i + k] = Math.max(0, Math.min(255, v));
+    }
+  }
+}
+function sharpen(img, w, h, amount){
+  if (amount <= 0 || w < 3 || h < 3) return;
+  const d = img.data, src = new Uint8ClampedArray(d);
+  for (let y = 1; y < h - 1; y++){
+    const row = y * w;
+    for (let x = 1; x < w - 1; x++){
+      const p = (row + x) * 4, l = p - 4, r = p + 4, u = p - w * 4, b = p + w * 4;
+      for (let k = 0; k < 3; k++){
+        const v = src[p + k] * (1 + 4 * amount)
+                - amount * (src[l + k] + src[r + k] + src[u + k] + src[b + k]);
+        d[p + k] = Math.max(0, Math.min(255, v));
+      }
+    }
+  }
+}
+function otsu(img){
+  const d = img.data, h = new Uint32Array(256);
+  let total = 0, sum = 0;
+  for (let i = 0; i < d.length; i += 4){
+    const y = Math.round(.299 * d[i] + .587 * d[i+1] + .114 * d[i+2]);
+    h[y]++; total++; sum += y;
+  }
+  let sumB = 0, wB = 0, max = 0, thr = 160;
+  for (let t = 0; t < 256; t++){
+    wB += h[t]; if (!wB) continue;
+    const wF = total - wB; if (!wF) break;
+    sumB += t * h[t];
+    const mB = sumB / wB, mF = (sum - sumB) / wF;
+    const v = wB * wF * (mB - mF) * (mB - mF);
+    if (v > max){ max = v; thr = t; }
+  }
+  return Math.max(105, Math.min(205, thr));
+}
+function whitenPaper(img, amount){
+  if (amount <= 0.005) return;
+  const d = img.data;
+  const hist = new Uint32Array(256);
+  for (let i = 0; i < d.length; i += 4){
+    const y = Math.max(0, Math.min(255, Math.round(.299 * d[i] + .587 * d[i+1] + .114 * d[i+2])));
+    hist[y]++;
+  }
+  const total = d.length / 4;
+  const p = 0.99 - amount * 0.64;
+  let sum = 0, whitePoint = 255;
+  for (let i = 0; i < 256; i++){
+    sum += hist[i];
+    if (sum >= total * p){ whitePoint = i; break; }
+  }
+  whitePoint = Math.max(60, whitePoint);
+  const scale = 255 / whitePoint;
+  for (let i = 0; i < d.length; i += 4){
+    let r = d[i] * scale, g = d[i+1] * scale, b = d[i+2] * scale;
+    d[i]   = r > 255 ? 255 : r;
+    d[i+1] = g > 255 ? 255 : g;
+    d[i+2] = b > 255 ? 255 : b;
+  }
+}
+function invertColors(img){
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    d[i]   = 255 - d[i];
+    d[i+1] = 255 - d[i+1];
+    d[i+2] = 255 - d[i+2];
+  }
+}
+function applyEffects(img, mode, w, h){
+  const d = img.data;
+  if (mode === 'none'){
+    if ($('invertToggle').checked) invertColors(img);
+    return;
+  }
+  const enhInt    = (Number($('enhanceIntensity').value) - 1) / 99;
+  const grayInt   = (Number($('grayIntensity').value)    - 1) / 99;
+  const whitenInt = (Number($('whitenIntensity').value)  - 1) / 99;
+
+  const forceGray = (mode === 'gray' || mode === 'bw' || mode === 'print');
+  const gmix = forceGray ? 1 : grayInt;
+
+  if (gmix > 0){
+    for (let i = 0; i < d.length; i += 4){
+      const y = .299 * d[i] + .587 * d[i+1] + .114 * d[i+2];
+      if (gmix >= 1){ d[i] = d[i+1] = d[i+2] = y; }
+      else {
+        d[i]   = d[i]   * (1 - gmix) + y * gmix;
+        d[i+1] = d[i+1] * (1 - gmix) + y * gmix;
+        d[i+2] = d[i+2] * (1 - gmix) + y * gmix;
+      }
+    }
+  }
+  if (mode !== 'color' && enhInt > 0.001){
+    autoLevels(img, 1 - 0.14 * enhInt);
+    sharpen(img, w, h, 0.11 * enhInt);
+  }
+  if (whitenInt > 0.001 && mode !== 'bw'){
+    whitenPaper(img, whitenInt);
+  }
+  if (mode === 'bw'){
+    const th = otsu(img);
+    for (let i = 0; i < d.length; i += 4){
+      const y = d[i] > th ? 255 : 0;
+      d[i] = d[i+1] = d[i+2] = y;
+    }
+  }
+  if ($('invertToggle').checked){
+    invertColors(img);
+  }
+}
+
+/* ---------------- Process ---------------- */
+function processedCanvas(){
+  if (current < 0) throw new Error('صفحه‌ای انتخاب نشده است.');
+  const page = pages[current];
+  const c = page.corners;
+  const top    = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
+  const bot    = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
+  const left   = Math.hypot(c[3].x - c[0].x, c[3].y - c[0].y);
+  const right  = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
+  let w = Math.max(64, Math.round((top + bot) / 2));
+  let h = Math.max(64, Math.round((left + right) / 2));
+  const maxDim = getMaxDim();
+  const scale = Math.min(1, maxDim / Math.max(w, h));
+  w = Math.max(32, Math.round(w * scale));
+  h = Math.max(32, Math.round(h * scale));
+
+  const edgesRaw = edgesOf(page);
+  const edgesSampled = edgesRaw.map(edge => {
+    const arr = new Array(EDGE_SAMPLES + 1);
+    for (let i = 0; i <= EDGE_SAMPLES; i++) arr[i] = sampleEdge(edge, i / EDGE_SAMPLES);
+    return arr;
+  });
+
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d', { willReadFrequently: true });
+  const src = sctx.getImageData(0, 0, source.width, source.height);
+  const dst = cx.createImageData(w, h);
+  const sd = src.data, dd = dst.data, sw = source.width, sh = source.height;
+
+  for (let Y = 0; Y < h; Y++){
+    const v = h > 1 ? Y / (h - 1) : 0;
+    for (let X = 0; X < w; X++){
+      const u = w > 1 ? X / (w - 1) : 0;
+      const s = coonsPoint(edgesSampled, u, v, c);
+      const di = (Y * w + X) * 4;
+      bilinear(sd, sw, sh, s.x, s.y, dd, di);
+    }
+  }
+  applyEffects(dst, $('mode').value, w, h);
+  cx.putImageData(dst, 0, 0);
+  return cv;
+}
+function bilinear(sd, sw, sh, sx, sy, dd, di){
+  sx = Math.max(0, Math.min(sw - 1, sx));
+  sy = Math.max(0, Math.min(sh - 1, sy));
+  const x0 = Math.floor(sx), y0 = Math.floor(sy);
+  const x1 = Math.min(sw - 1, x0 + 1), y1 = Math.min(sh - 1, y0 + 1);
+  const fx = sx - x0, fy = sy - y0;
+  const i00 = (y0 * sw + x0) * 4, i10 = (y0 * sw + x1) * 4;
+  const i01 = (y1 * sw + x0) * 4, i11 = (y1 * sw + x1) * 4;
+  const w00 = (1 - fx) * (1 - fy), w10 = fx * (1 - fy);
+  const w01 = (1 - fx) * fy,       w11 = fx * fy;
+  for (let k = 0; k < 3; k++)
+    dd[di + k] = sd[i00 + k] * w00 + sd[i10 + k] * w10 + sd[i01 + k] * w01 + sd[i11 + k] * w11;
+  dd[di + 3] = 255;
+}
+function processCurrent(){
+  if (current < 0) return;
+  try{
+    const cv = processedCanvas();
+    out.width = cv.width;
+    out.height = cv.height;
+    outctx.clearRect(0, 0, out.width, out.height);
+    outctx.drawImage(cv, 0, 0);
+    $('outputBox').classList.add('has-output');
+    $('outputDim').textContent = `${out.width.toLocaleString('fa-IR')} × ${out.height.toLocaleString('fa-IR')}`;
+    scheduleUpdateOutputInfo();
+
+    const key = out.width + 'x' + out.height + '@' + current;
+    if (key !== prevOutKey){
+      prevOutKey = key;
+      requestAnimationFrame(fitOutView);
+    }
+  } catch (e){ console.error(e); }
+}
+
+/* ---------------- Output info ---------------- */
+let infoTimer = null;
+function scheduleUpdateOutputInfo(){
+  clearTimeout(infoTimer);
+  infoTimer = setTimeout(updateOutputInfo, 220);
+}
+async function updateOutputInfo(){
+  if (current < 0 || !out.width) return;
+  try{
+    const blob = await new Promise(r => out.toBlob(r, 'image/jpeg', getQuality()));
+    if (!blob) return;
+    const size = blob.size;
+    const sizeStr = size >= 1024 * 1024
+      ? (size / 1024 / 1024).toFixed(2) + ' MB'
+      : (size / 1024).toFixed(1) + ' KB';
+    $('outputSize').textContent = sizeStr;
+  } catch(e){
+    $('outputSize').textContent = '—';
+  }
+}
+
+/* ---------------- Downloads ---------------- */
+function blobFromCanvas(cv, type, quality){ return new Promise(res => cv.toBlob(res, type, quality)); }
+function downloadBlob(blob, name){
+  const a = document.createElement('a');
+  const u = URL.createObjectURL(blob);
+  a.href = u; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 1800);
+}
+async function downloadImage(ext){
+  if (current < 0 || busy) return;
+  try{
+    const cv = processedCanvas();
+    const blob = await blobFromCanvas(cv, ext === 'png' ? 'image/png' : 'image/jpeg', ext === 'png' ? undefined : getQuality());
+    downloadBlob(blob, `scan-${current + 1}.${ext}`);
+  } catch (e){ console.error(e); }
+}
+
+/* ---------------- PDF ---------------- */
+function bytes(s){ return new TextEncoder().encode(s); }
+function joinBytes(parts){
+  const n = parts.reduce((a, b) => a + b.length, 0);
+  const o = new Uint8Array(n);
+  let p = 0;
+  for (const x of parts){ o.set(x, p); p += x.length; }
+  return o;
+}
+async function buildPdfBlob(){
+  if (!pages.length) throw new Error('صفحه‌ای وجود ندارد.');
+  const old = current, imgs = [];
+  for (let i = 0; i < pages.length; i++){
+    current = i;
+    drawSource();
+    await nextPaint();
+    const cv = processedCanvas();
+    const blob = await blobFromCanvas(cv, 'image/jpeg', getQuality());
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    imgs.push({ buf, w: cv.width, h: cv.height });
+  }
+  current = old >= 0 ? Math.min(old, pages.length - 1) : 0;
+  drawSource();
+  renderPages();
+  const { W: PW, H: PH } = getPaperSize();
+  const count = imgs.length, objCount = 2 + count * 3;
+  const parts = [], offsets = Array(objCount + 1).fill(0);
+  let pos = 0;
+  const add = x => { parts.push(x); pos += x.length; };
+  const addObj = (n, chunks) => {
+    offsets[n] = pos;
+    add(bytes(`${n} 0 obj\n`));
+    chunks.forEach(add);
+    add(bytes(`\nendobj\n`));
+  };
+  add(bytes('%PDF-1.4\n'));
+  addObj(1, [bytes('<< /Type /Catalog /Pages 2 0 R >>')]);
+  const kids = imgs.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
+  addObj(2, [bytes(`<< /Type /Pages /Count ${count} /Kids [${kids}] >>`)]);
+  imgs.forEach((im, i) => {
+    const page = 3 + i * 3, image = page + 1, content = page + 2;
+    const margin = 22;
+    const scale = Math.min((PW - 2 * margin) / im.w, (PH - 2 * margin) / im.h);
+    const dw = im.w * scale, dh = im.h * scale;
+    const x = (PW - dw) / 2, y = (PH - dh) / 2;
+    const stream = `q\n${dw.toFixed(2)} 0 0 ${dh.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im${i+1} Do\nQ\n`;
+    const sb = bytes(stream);
+    addObj(page, [bytes(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW.toFixed(2)} ${PH.toFixed(2)}] /Resources << /XObject << /Im${i+1} ${image} 0 R >> >> /Contents ${content} 0 R >>`)]);
+    addObj(image, [bytes(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.buf.length} >>\nstream\n`), im.buf, bytes('\nendstream')]);
+    addObj(content, [bytes(`<< /Length ${sb.length} >>\nstream\n`), sb, bytes('endstream')]);
+  });
+  const xref = pos;
+  add(bytes(`xref\n0 ${objCount + 1}\n0000000000 65535 f \n`));
+  for (let i = 1; i <= objCount; i++)
+    add(bytes(String(offsets[i]).padStart(10, '0') + ' 00000 n \n'));
+  add(bytes(`trailer\n<< /Size ${objCount + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`));
+  return new Blob([joinBytes(parts)], { type: 'application/pdf' });
+}
+async function downloadPdf(){
+  if (busy || !pages.length) return;
+  try{
+    busy = true; refreshControls();
+    await nextPaint();
+    const b = await buildPdfBlob();
+    downloadBlob(b, 'scan.pdf');
+  } catch (e){ console.error(e); }
+  finally{ busy = false; refreshControls(); }
+}
+
+/* ---------------- Print ---------------- */
+async function printPdf(){
+  if (busy || !pages.length) return;
+  let url = '';
+  try{
+    busy = true; refreshControls();
+    await nextPaint();
+    const blob = await buildPdfBlob();
+    url = URL.createObjectURL(blob);
+
+    // Hidden iframe approach — most reliable for one-click print in Chromium
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    let printed = false;
+    const doPrint = () => {
+      if (printed) return;
+      printed = true;
+      try{
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch(err){
+        console.error('print failed', err);
+        try { window.open(url, '_blank'); } catch(_){}
+      }
+    };
+
+    iframe.onload = () => setTimeout(doPrint, 250);
+    iframe.src = url;
+    // fallback
+    setTimeout(() => { if (!printed) doPrint(); }, 900);
+
+    // cleanup — plenty of time for print dialog to open
+    setTimeout(() => {
+      try { iframe.remove(); } catch(_){}
+      if (url) { try { URL.revokeObjectURL(url); } catch(_){} }
+    }, 5 * 60 * 1000);
+  } catch(e){
+    console.error(e);
+    if (url) { try { URL.revokeObjectURL(url); } catch(_){} }
+  }
+  finally{ busy = false; refreshControls(); }
+}
+
+/* ---------------- Init ---------------- */
+$('enhanceValue').textContent = $('enhanceIntensity').value;
+$('grayValue').textContent    = $('grayIntensity').value;
+$('whitenValue').textContent  = $('whitenIntensity').value;
+$('qualityValue').textContent = $('qualitySlider').value;
+$('sizeValue').textContent    = $('sizeSlider').value;
+refreshControls();
+</script>
 </body>
 </html>
