@@ -2,258 +2,151 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="همیار کافینت افزونه - مدیریت پیشرفته بوکمارک‌ها در مرورگر">
-    <title>همیار کافینت افزونه</title>
-    
-    <!-- Favicon -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f4f6fb">
+    <meta name="description" content="همیار کافینت؛ مدیریت سریع و منظم بوکمارک‌ها و ابزارهای کاربردی مرورگر">
+    <title>همیار کافینت</title>
     <link rel="icon" type="image/png" href="icons/default_icon.png">
-    
-    <!-- Styles -->
     <link rel="stylesheet" href="dashboard.css">
-    
-
 </head>
 <body>
-    
-    <!-- بک‌گراند ثابت -->
-    <div id="fixed-background"></div>
-    <!-- لایه محو روی بک‌گراند -->
-    <div id="background-overlay"></div>
-    
-    <!-- نوار جستجو -->
-    <div id="search-container" class="search-container hidden">
-        <input type="search" id="bookmark-search" placeholder="جستجو در بوکمارک‌ها..." autocomplete="off">
-        <button id="close-search" class="close-search">✕</button>
-    </div>
-    
-    <!-- Wrapper برای زوم -->
-    <div id="zoom-wrapper">
-        <!-- کانتینر اصلی -->
-        <main id="grid-container" role="main" aria-label="لیست بوکمارک‌ها">
-            <!-- محتوای بوکمارک‌ها اینجا نمایش داده می‌شود -->
-        </main>
+    <div id="fixed-background" aria-hidden="true"></div>
+    <div id="background-overlay" aria-hidden="true"></div>
+
+    <div class="search-top-wrapper" role="search" aria-label="جست‌وجوی بوکمارک‌ها">
+        <div id="search-container" class="search-container hidden">
+            <input type="search" id="bookmark-search" placeholder="جست‌وجو در بوکمارک‌ها..." autocomplete="off" spellcheck="false" aria-label="عبارت جست‌وجو">
+        </div>
+        <button type="button" id="search-btn" class="search-top-btn" title="جست‌وجو" aria-label="باز کردن جست‌وجو">🔍</button>
+        <button type="button" id="close-search-btn" class="search-top-btn close-search-top" style="display: none;" title="بستن جست‌وجو" aria-label="بستن جست‌وجو">✕</button>
     </div>
 
-    <!-- منوی کنترل -->
+    <div id="zoom-wrapper">
+        <main id="grid-container" role="main" aria-label="لیست بوکمارک‌ها"></main>
+    </div>
+
     <div id="control-menu" aria-label="کنترل‌های اصلی">
         <div id="sub-controls" class="hidden-controls">
-            
-            <div class="text-container visible-on-edit" id="custom-text-box">
-				TELEGRAM ID📱: ALI73JN
-			</div>
-            
-            <!-- کنترل‌های ظاهر -->
-            <div class="zoom-controls visible-on-edit">
-                <button id="zoom-out-btn" class="zoom-btn" title="کوچک‌نمایی (75-125%)"> ➖ </button>
+            <div class="text-container visible-on-edit" id="custom-text-box" title="شناسهٔ ارتباطی">
+                TELEGRAM ID📱: ALI73JN
+            </div>
+            <div class="zoom-controls visible-on-edit" aria-label="کنترل بزرگ‌نمایی">
+                <button type="button" id="zoom-out-btn" class="zoom-btn" title="کوچک‌نمایی (75-125%)" aria-label="کوچک‌نمایی">−</button>
                 <span id="zoom-level-display">100%</span>
-                <button id="zoom-in-btn" class="zoom-btn" title="بزرگ‌نمایی (75-125%)"> ➕ </button>
+                <button type="button" id="zoom-in-btn" class="zoom-btn" title="بزرگ‌نمایی (75-125%)" aria-label="بزرگ‌نمایی">+</button>
             </div>
-			
-            <button id="toggle-weather-mode" class="sub-btn visible-on-edit" title="تغییر حالت کارت آب و هوا">🌡️</button>
-            <button id="overlay-blur-btn" class="sub-btn visible-on-edit" title="کنترل بلور پس‌زمینه">🌫️</button>
-            <button id="set-background-btn" class="sub-btn" title="انتخاب پس زمینه">🖼️</button>
-            <button id="toggle-theme-btn" class="sub-btn" title="تغییر حالت تاریک/روشن">🌓</button>
-            
-            <!-- دکمه‌های ایمپورت/اکسپورت (حفظ شده) -->
-			<button id="refresh-bookmarks-btn" class="sub-btn" title="به‌روزرسانی از مرورگر">🔄</button>
-			<button id="combined-online-import-btn" class="sub-btn" title="دریافت آنلاین کامل (بوکمارک + تنظیمات)">✨🌐</button>
-            <button id="export-bookmarks-btn" class="sub-btn" title="خروجی بوکمارک‌ها">🔖📤</button>
-            <button id="import-bookmarks-btn" class="sub-btn" title="ورود بوکمارک‌ها">🔖📥</button>
-            <button id="export-settings-btn" class="sub-btn" title="خروجی تنظیمات">⚙️📤</button>
-            <button id="import-settings-btn" class="sub-btn" title="ورود تنظیمات">⚙️📥</button>
-            
-            <!-- متن دلخواه (اختیاری) -->
-            <div class="text-container visible-on-edit" id="custom-text-box" style="display: none;">
-                📱 افزونه همیار کافینت
-            </div>
-            
+            <button type="button" id="font-settings-btn" class="sub-btn visible-on-edit" title="انتخاب فونت" aria-label="انتخاب فونت">🔤</button>
+            <button type="button" id="dimensions-btn" class="sub-btn visible-on-edit" title="تنظیم ابعاد" aria-label="تنظیم ابعاد">📏</button>
+            <button type="button" id="search-mode-btn" class="sub-btn visible-on-edit" title="تغییر حالت جستجو (شناور/کارت)" aria-label="تغییر حالت جستجو">🔍</button>
+            <button type="button" id="toggle-weather-mode" class="sub-btn visible-on-edit" title="تغییر حالت کارت آب‌وهوا" aria-label="حالت کارت آب‌وهوا">🌡️</button>
+            <button type="button" id="overlay-blur-btn" class="sub-btn visible-on-edit" title="کنترل محوشدگی پس‌زمینه" aria-label="تنظیم محوشدگی پس‌زمینه">🌫️</button>
+            <button type="button" id="set-background-btn" class="sub-btn" title="انتخاب پس‌زمینه" aria-label="انتخاب پس‌زمینه">🖼️</button>
+            <button type="button" id="toggle-theme-btn" class="sub-btn" title="تغییر حالت تاریک و روشن" aria-label="تغییر پوسته">🌓</button>
+            <button type="button" id="refresh-bookmarks-btn" class="sub-btn" title="به‌روزرسانی از مرورگر" aria-label="به‌روزرسانی بوکمارک‌ها">🔄</button>
+            <button type="button" id="combined-online-import-btn" class="sub-btn" title="دریافت آنلاین بوکمارک‌ها و تنظیمات" aria-label="دریافت آنلاین">✨🌐</button>
+            <button type="button" id="export-bookmarks-btn" class="sub-btn" title="خروجی بوکمارک‌ها" aria-label="خروجی بوکمارک‌ها">🔖📤</button>
+            <button type="button" id="import-bookmarks-btn" class="sub-btn" title="ورود بوکمارک‌ها" aria-label="ورود بوکمارک‌ها">🔖📥</button>
+            <button type="button" id="export-settings-btn" class="sub-btn" title="خروجی تنظیمات" aria-label="خروجی تنظیمات">⚙️📤</button>
+            <button type="button" id="import-settings-btn" class="sub-btn" title="ورود تنظیمات" aria-label="ورود تنظیمات">⚙️📥</button>
         </div>
-
-        <button id="edit-mode-btn" class="main-btn" title="حالت ویرایش">✏️</button>
-    </div>
-    
-	<div class="search-top-wrapper">
-		<div id="search-container" class="search-container hidden">
-			<input type="search" id="bookmark-search" placeholder="جستجو در بوکمارک‌ها..." autocomplete="off">
-		</div>
-		<button id="search-btn" class="search-top-btn" title="جستجو">🔍</button>
-		<button id="close-search-btn" class="search-top-btn close-search-top" style="display: none;" title="بستن جستجو">✕</button>
-	</div>
-	
-	
-	<div id="left-toolbar">
-
-    <div class="toolbar-item">
-        <button id="image-compressor-btn" class="left-toolbar-btn">
-            <span class="icon">🖼️</span>
-            <span class="label">کاهش حجم تصویر</span>
-        </button>
+        <button type="button" id="edit-mode-btn" class="main-btn" title="حالت ویرایش" aria-label="فعال یا غیرفعال کردن حالت ویرایش">✏️</button>
     </div>
 
-	<div class="toolbar-item">
-		<button id="perspective-crop-btn" class="left-toolbar-btn">
-			<span class="icon">📐</span>
-			<span class="label">کراپ پرسپکتیو</span>
-		</button>
-	</div>
+    <nav id="left-toolbar" aria-label="ابزارهای کاربردی تصویر و سند">
+        <div class="toolbar-item"><button type="button" id="image-compressor-btn" class="left-toolbar-btn" title="کاهش حجم تصویر"><span class="icon">🖼️</span><span class="label">کاهش حجم تصویر</span></button></div>
+        <div class="toolbar-item"><button type="button" id="perspective-crop-btn" class="left-toolbar-btn" title="کراپ پرسپکتیو"><span class="icon">📐</span><span class="label">کراپ پرسپکتیو</span></button></div>
+        <div class="toolbar-item"><button type="button" id="pdf-btn" class="left-toolbar-btn" title="ساخت PDF"><span class="icon">📄</span><span class="label">ساخت PDF</span></button></div>
+        <div class="toolbar-item"><button type="button" id="remove-bg-btn" class="left-toolbar-btn" title="حذف پس‌زمینه"><span class="icon">🪄</span><span class="label">حذف پس‌زمینه</span></button></div>
+        <div class="toolbar-item"><button type="button" id="persian-calendar-btn" class="left-toolbar-btn" title="تقویم شمسی"><span class="icon">📅</span><span class="label">تقویم شمسی</span></button></div>
+        <div class="toolbar-item"><button type="button" id="image-to-text-btn" class="left-toolbar-btn" title="تبدیل عکس به متن"><span class="icon">📝</span><span class="label">عکس به متن</span></button></div>
+        <div class="toolbar-item"><button type="button" id="pdf-editor-btn" class="left-toolbar-btn" title="ویرایش PDF"><span class="icon">📄</span><span class="label">ویرایش PDF</span></button></div>
+    </nav>
 
-	<div class="toolbar-item">
-		<button id="pdf-btn" class="left-toolbar-btn">
-			<span class="icon">📄</span>
-			<span class="label">ساخت PDF</span>
-		</button>
-	</div>
-	
-	<div class="toolbar-item">
-		<button id="remove-bg-btn" class="left-toolbar-btn">
-			<span class="icon">🪄</span>
-			<span class="label">حذف پس‌زمینه</span>
-		</button>
-	</div>
+    <nav id="bottom-left-toolbar" aria-label="میانبرهای مرورگر">
+        <div class="toolbar-item"><button type="button" id="downloads-btn" class="left-toolbar-btn" title="دانلودها"><span class="icon">⬇️</span><span class="label">دانلودها</span></button></div>
+        <div class="toolbar-item"><button type="button" id="history-btn" class="left-toolbar-btn" title="تاریخچه"><span class="icon">🕘</span><span class="label">تاریخچه</span></button></div>
+        <div class="toolbar-item"><button type="button" id="extensions-btn" class="left-toolbar-btn" title="افزونه‌ها"><span class="icon">🧩</span><span class="label">افزونه‌ها</span></button></div>
+        <div class="toolbar-item"><button type="button" id="bookmarks-btn" class="left-toolbar-btn" title="بوکمارک‌ها"><span class="icon">⭐</span><span class="label">بوکمارک‌ها</span></button></div>
+        <div class="toolbar-item"><button type="button" id="password-manager-btn" class="left-toolbar-btn" title="مدیریت رمزها"><span class="icon">🔑</span><span class="label">رمزها</span></button></div>
+    </nav>
 
-	<div class="toolbar-item">
-		<button id="persian-calendar-btn" class="left-toolbar-btn">
-			<span class="icon">📅</span>
-			<span class="label">تقویم شمسی</span>
-		</button>
-	</div>
+    <input type="file" id="import-settings-file" accept=".json" hidden>
+    <input type="file" id="import-bookmarks-file" accept=".json" hidden>
+    <input type="file" id="background-file-input" accept="image/*" hidden>
 
-	<div class="toolbar-item">
-		<button id="image-to-text-btn" class="left-toolbar-btn">
-			<span class="icon">📝</span>
-			<span class="label">عکس به متن</span>
-		</button>
-	</div>
-
-	<div class="toolbar-item">
-		<button id="pdf-editor-btn" class="left-toolbar-btn">
-			<span class="icon">📄</span>
-			<span class="label">ویرایش PDF</span>
-		</button>
-	</div>
-
-	</div>
-
-
-	<div id="bottom-left-toolbar">
-
-		<div class="toolbar-item">
-			<button id="downloads-btn" class="left-toolbar-btn">
-				<span class="icon">⬇️</span>
-				<span class="label">دانلودها</span>
-			</button>
-		</div>
-
-		<div class="toolbar-item">
-			<button id="history-btn" class="left-toolbar-btn">
-				<span class="icon">🕘</span>
-				<span class="label">تاریخچه</span>
-			</button>
-		</div>
-
-		<div class="toolbar-item">
-			<button id="extensions-btn" class="left-toolbar-btn">
-				<span class="icon">🧩</span>
-				<span class="label">افزونه‌ها</span>
-			</button>
-		</div>
-
-		<div class="toolbar-item">
-			<button id="bookmarks-btn" class="left-toolbar-btn">
-				<span class="icon">⭐</span>
-				<span class="label">بوکمارک‌ها</span>
-			</button>
-		</div>
-
-		<div class="toolbar-item">
-			<button id="password-manager-btn" class="left-toolbar-btn">
-				<span class="icon">🔑</span>
-				<span class="label">رمزها</span>
-			</button>
-		</div>
-
-	</div>	
-	
-	
-	
-    <!-- Inputهای فایل مخفی -->
-    <input type="file" id="import-settings-file" accept=".json" style="display: none;">
-    <input type="file" id="import-bookmarks-file" accept=".json" style="display: none;">
-    <input type="file" id="background-file-input" accept="image/*" style="display: none;">
-
-    <!-- Modal تنظیمات (شبیه سایت) -->
     <div id="settings-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3>تنظیمات افزونه</h3>
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+            <div class="modal-heading"><span class="modal-heading-icon">⚙️</span><div><h3 id="settings-modal-title">تنظیمات افزونه</h3><p>ظاهر و داده‌های همیار کافینت را مدیریت کنید.</p></div></div>
             <div class="settings-section">
-                <h4>ظاهر</h4>
-                <label>
-                    <input type="checkbox" id="auto-dark-mode">
-                    حالت تاریک خودکار
-                </label>
-                <label>
-                    <input type="checkbox" id="compact-view">
-                    نمایش فشرده
-                </label>
+                <h4>ظاهر و نمایش</h4>
+                <label class="setting-toggle" for="auto-dark-mode"><span><strong>حالت تاریک خودکار</strong><small>هماهنگ با ترجیح نمایش سیستم</small></span><input type="checkbox" id="auto-dark-mode"></label>
+                <label class="setting-toggle" for="compact-view"><span><strong>نمایش فشرده</strong><small>نمایش آیتم‌های بیشتر در فضای کمتر</small></span><input type="checkbox" id="compact-view"></label>
             </div>
-            
             <div class="settings-section">
                 <h4>همگام‌سازی</h4>
-                <label>
-                    آدرس JSON بوکمارک‌ها (اختیاری):
-                    <input type="url" id="bookmarks-json-url" placeholder="https://raw.githubusercontent.com/...">
-                </label>
-                <button id="reset-bookmarks-url" class="btn-secondary">بازنشانی به پیش‌فرض</button>
+                <label for="bookmarks-json-url">آدرس JSON بوکمارک‌ها <span class="optional-label">اختیاری</span><input type="url" id="bookmarks-json-url" placeholder="https://raw.githubusercontent.com/..."></label>
             </div>
-            
-            <div class="settings-section">
-                <h4>داده‌ها</h4>
-                <button id="clear-cache-btn" class="btn-danger">پاک کردن ذخیره‌سازی</button>
-                <button id="reset-all-btn" class="btn-danger">بازنشانی همه تنظیمات</button>
+            <div class="settings-section danger-section">
+                <h4>مدیریت داده‌ها</h4>
+                <p class="section-description">این عملیات ممکن است اطلاعات ذخیره‌شده را تغییر دهد.</p>
+                <div class="danger-actions"><button type="button" id="clear-cache-btn" class="btn-danger">پاک کردن ذخیره‌سازی</button><button type="button" id="reset-all-btn" class="btn-danger btn-danger-outline">بازنشانی همه تنظیمات</button></div>
             </div>
-            
-            <div class="modal-buttons">
-                <button type="button" id="close-settings-btn" class="btn-secondary">بستن</button>
-                <button type="button" id="save-settings-btn" class="btn-success">ذخیره تنظیمات</button>
-            </div>
-        </div>
+            <div class="modal-buttons"><button type="button" id="close-settings-btn" class="btn-secondary">بستن</button><button type="button" id="save-settings-btn" class="btn-success">ذخیره تنظیمات</button></div>
+        </section>
     </div>
-    
-    <!-- Modal مدیریت محتوا (بوکمارک) -->
+
     <div id="bookmark-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3>مدیریت محتوا</h3>
-            <input type="hidden" id="current-card-id">
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="bookmark-modal-title">
+            <div class="modal-heading"><span class="modal-heading-icon">🔖</span><div><h3 id="bookmark-modal-title">مدیریت محتوا</h3><p>مشخصات بوکمارک یا پوشه را وارد کنید.</p></div></div>
             <input type="hidden" id="editing-item-id">
-
             <form id="bookmark-form">
-                <label for="bookmark-type">نوع:</label>
-                <select id="bookmark-type">
-                    <option value="bookmark">بوکمارک</option>
-                    <option value="folder">پوشه</option>
-                </select>
-                
-                <label for="bookmark-name">نام:</label>
-                <input type="text" id="bookmark-name" required aria-required="true">
-
-                <div id="url-field-group">
-                    <label for="bookmark-url">آدرس (URL):</label>
-                    <input type="url" id="bookmark-url">
-                </div>
-                
-                <label for="bookmark-description">توضیحات (اختیاری):</label>
-                <textarea id="bookmark-description" rows="3"></textarea>
-                
-                <div class="modal-buttons">
-                    <button type="button" id="delete-btn" class="btn-danger hidden">حذف</button>
-                    <button type="button" id="cancel-btn" class="btn-secondary">لغو</button>
-                    <button type="submit" id="save-btn" class="btn-success">ذخیره</button>
-                </div>
+                <label for="bookmark-type">نوع محتوا</label>
+                <select id="bookmark-type"><option value="bookmark">بوکمارک</option><option value="folder">پوشه</option></select>
+                <label for="bookmark-name">نام</label>
+                <input type="text" id="bookmark-name" required aria-required="true" placeholder="مثلاً ابزارهای روزمره">
+                <div id="url-field-group"><label for="bookmark-url">آدرس (URL)</label><input type="url" id="bookmark-url" placeholder="https://example.com"></div>
+                <label for="bookmark-description">توضیحات <span class="optional-label">اختیاری</span></label>
+                <textarea id="bookmark-description" rows="3" placeholder="یادداشت کوتاه برای این مورد..."></textarea>
+                <div class="modal-buttons"><button type="button" id="delete-btn" class="btn-danger hidden">حذف</button><button type="button" id="cancel-btn" class="btn-secondary">لغو</button><button type="submit" id="save-btn" class="btn-success">ذخیره</button></div>
             </form>
-        </div>
+        </section>
     </div>
-    
+
+    <!-- ============ مودال انتخاب فونت (بدون بلور پس‌زمینه) ============ -->
+    <div id="font-modal" class="modal-overlay hidden">
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="font-modal-title">
+            <div class="modal-heading">
+                <span class="modal-heading-icon">🔤</span>
+                <div>
+                    <h3 id="font-modal-title">انتخاب فونت</h3>
+                    <p>فونت‌های موجود در پوشه <code>font/</code> نمایش داده می‌شوند.</p>
+                </div>
+            </div>
+            <div id="font-list" class="font-list"></div>
+            <div class="modal-buttons">
+                <button type="button" id="close-font-btn" class="btn-secondary">بستن</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============ مودال تنظیم ابعاد (بدون بلور پس‌زمینه) ============ -->
+    <div id="dimensions-modal" class="modal-overlay hidden">
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="dimensions-modal-title">
+            <div class="modal-heading">
+                <span class="modal-heading-icon">📏</span>
+                <div>
+                    <h3 id="dimensions-modal-title">تنظیم ابعاد</h3>
+                    <p>وسط = پیش‌فرض • دوبار کلیک روی اسلایدر = بازنشانی</p>
+                </div>
+            </div>
+            <div id="dimensions-list" class="dimensions-list"></div>
+            <div class="modal-buttons">
+                <button type="button" id="reset-dimensions-btn" class="btn-danger btn-danger-outline">بازنشانی همه</button>
+                <button type="button" id="close-dimensions-btn" class="btn-secondary">بستن</button>
+            </div>
+        </section>
+    </div>
+
     <script src="dashboard.js"></script>
 </body>
 </html>

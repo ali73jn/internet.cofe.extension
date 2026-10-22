@@ -1,0 +1,12 @@
+[
+  { "name": "IRANSans",  "file": "./font/IRANSansXV.woff2",  "label": "ایران‌سنس" },
+  { "name": "pinar", "file": "./font/Pinar-VF-FD[DSTY,KSHD,wght].woff2", "label": "پینار" },
+  { "name": "Vazir",     "file": "./font/Vazir.woff2",     "label": "وزیر" },
+  { "name": "rokh",     "file": "./font/Rokh-Regular.woff2",     "label": "رخ" },
+  { "name": "morabba",   "file": "./font/Morabba-Regular.woff2",   "label": "مربا" },
+  { "name": "YekanBakh",   "file": "./font/YekanBakh-Regular.woff2",   "label": "یکان بخ" },
+  { "name": "alibaba",   "file": "./font/Alibaba-Regular.woff2",   "label": "علی بابا" },
+  { "name": "anjoman",   "file": "./font/Anjoman-FaNum-Regular.woff2",   "label": "انجمن" },
+  { "name": "aviny",   "file": "./font/aviny web.woff2",   "label": "آوینی" },
+  { "name": "morabba",   "file": "./font/Morabba-Regular.woff2",   "label": "مربا" }
+]

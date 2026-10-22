@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>اسکنر</title>
 <style>
 :root{
@@ -133,7 +133,6 @@ button,input,select{font:inherit}
   position:absolute;
   top:0;left:0;
   width:100%;height:100%;
-  touch-action:none;
 }
 
 /* Empty state (drop zone + button) */
@@ -194,7 +193,10 @@ button,input,select{font:inherit}
   line-height:1.7;
   text-align:right;
   direction:rtl;
+  transition:opacity .15s;        /* ← اضافه شود */
 }
+.hint.hint-hidden{ opacity:0; }   /* ← اضافه شود */
+
 .hint-line{display:block;white-space:nowrap}
 
 /* ---------- Right ---------- */
@@ -319,7 +321,6 @@ button,input,select{font:inherit}
   inset:0;
   display:none;
   overflow:hidden;
-  touch-action:none;
   user-select:none;
 }
 .output-box.has-output .output-canvas-wrap{display:block}
@@ -444,12 +445,6 @@ button,input,select{font:inherit}
   font-weight:900;font-size:12px;cursor:pointer;
 }
 
-@media(max-width:900px){
-  .layout{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
-  .right{border-left:0;border-top:1px solid var(--line)}
-  .output-box{height:200px}
-  .slider-line{grid-template-columns:100px 1fr}
-}
 </style>
 </head>
 <body>
@@ -460,10 +455,10 @@ button,input,select{font:inherit}
       <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
       <span>📂 باز کردن</span>
     </label>
-    <button class="tbtn" id="rotLBtn" onclick="rotateLeft()" disabled>↶ چپ</button>
-    <button class="tbtn" id="rotRBtn" onclick="rotateRight()" disabled>↷ راست</button>
-    <button class="tbtn" id="flipHBtn" onclick="flipH()" disabled>⇄ افقی</button>
-    <button class="tbtn" id="flipVBtn" onclick="flipV()" disabled>⇅ عمودی</button>
+    <button class="tbtn" id="rotLBtn" onclick="rotateLeft()" disabled>↶ چرخش چپ</button>
+    <button class="tbtn" id="rotRBtn" onclick="rotateRight()" disabled>↷ چرخش راست</button>
+    <button class="tbtn" id="flipHBtn" onclick="flipH()" disabled>⇄ آینه افقی</button>
+    <button class="tbtn" id="flipVBtn" onclick="flipV()" disabled>⇅ آینه عمودی</button>
     <button class="tbtn" id="resetBtn" onclick="resetCorners()" disabled>▣ بازنشانی</button>
     <button class="tbtn" id="zoomResetBtn" onclick="zoomReset()" disabled>🔍 بازنشانی زوم</button>
     <button class="tbtn" id="zoomFitBtn" onclick="zoomFitPoints()" disabled>🎯 زوم روی نقاط</button>
@@ -536,14 +531,11 @@ button,input,select{font:inherit}
         <div class="field-row">
           <div class="field">
             <label>حالت تصویر</label>
-            <select id="mode" onchange="onModeChange()" disabled>
-              <option value="none">بدون تغییر</option>
-              <option value="enhanced" selected>بهبود هوشمند</option>
-              <option value="color">رنگی</option>
-              <option value="gray">خاکستری</option>
-              <option value="print">پرینت</option>
-              <option value="bw">سیاه و سفید سندی</option>
-            </select>
+			<select id="mode" onchange="onModeChange()" disabled>
+			  <option value="bw" selected>سیاه و سفید</option>
+			  <option value="color">رنگی</option>
+			  <option value="none">بدون تغییر</option>
+			</select>
           </div>
           <div class="field">
             <label>اندازه PDF</label>
@@ -560,30 +552,38 @@ button,input,select{font:inherit}
           </label>
         </div>
       </div>
+	  
+	  
+		<div class="panel" id="enhancePanel">
+		  <div class="slider-line">
+			<span class="lbl">شدت بهبود: <b id="enhanceValue">100</b></span>
+			<input type="range" id="enhanceIntensity" min="1" max="100" value="100"
+				   oninput="onEnhanceInput()" onchange="onSliderApply()" disabled>
+		  </div>
+		</div>
 
-      <div class="panel" id="enhancePanel">
-        <div class="slider-line">
-          <span class="lbl">شدت بهبود: <b id="enhanceValue">100</b></span>
-          <input type="range" id="enhanceIntensity" min="1" max="100" value="100"
-                 oninput="onEnhanceInput()" onchange="onSliderApply()" disabled>
-        </div>
-      </div>
+		<div class="panel" id="whitenPanel">
+		  <div class="slider-line">
+			<span class="lbl">سفیدی کاغذ: <b id="whitenValue">30</b></span>
+			<input type="range" id="whitenIntensity" min="1" max="100" value="30"
+				   oninput="onWhitenInput()" onchange="onSliderApply()" disabled>
+		  </div>
+		</div>
 
-      <div class="panel" id="grayPanel">
-        <div class="slider-line">
-          <span class="lbl">میزان خاکستری: <b id="grayValue">100</b></span>
-          <input type="range" id="grayIntensity" min="1" max="100" value="100"
-                 oninput="onGrayInput()" onchange="onSliderApply()" disabled>
-        </div>
-      </div>
+		<div class="panel" id="colorPanel" style="display:none">
+		  <div class="slider-line">
+			<span class="lbl">میزان رنگ: <b id="colorValue">20</b></span>
+			<input type="range" id="colorIntensity" min="-100" max="100" value="20"
+				   oninput="onColorInput()" onchange="onSliderApply()" disabled>
+		  </div>
+		  <div class="slider-line">
+			<span class="lbl">کیفیت پرینت: <b id="printValue">70</b></span>
+			<input type="range" id="printIntensity" min="0" max="100" value="70"
+				   oninput="onPrintInput()" onchange="onSliderApply()" disabled>
+		  </div>
+		</div>
 
-      <div class="panel" id="whitenPanel">
-        <div class="slider-line">
-          <span class="lbl">سفیدی کاغذ: <b id="whitenValue">100</b></span>
-          <input type="range" id="whitenIntensity" min="1" max="100" value="100"
-                 oninput="onWhitenInput()" onchange="onSliderApply()" disabled>
-        </div>
-      </div>
+
 
       <div class="panel">
         <h3>صفحه‌ها (برای جابه‌جایی، بکشید)</h3>
@@ -631,8 +631,9 @@ function onSizeInput(){ $('sizeValue').textContent = $('sizeSlider').value; }
 function onSizeChange(){ processCurrent(); }
 
 function onEnhanceInput(){ $('enhanceValue').textContent = $('enhanceIntensity').value; }
-function onGrayInput(){ $('grayValue').textContent = $('grayIntensity').value; }
-function onWhitenInput(){ $('whitenValue').textContent = $('whitenIntensity').value; }
+function onWhitenInput(){  $('whitenValue').textContent  = $('whitenIntensity').value; }
+function onColorInput(){   $('colorValue').textContent   = $('colorIntensity').value; }
+function onPrintInput(){   $('printValue').textContent   = $('printIntensity').value; }
 function onSliderApply(){ processCurrent(); }
 function onInvertChange(){
   $('invertLabel').classList.toggle('active', $('invertToggle').checked);
@@ -665,14 +666,14 @@ function refreshControls(){
   document.querySelectorAll('#pages .page').forEach(el => {
     el.setAttribute('draggable', (!locked && hasPage) ? 'true' : 'false');
   });
-  ['enhanceIntensity','grayIntensity','whitenIntensity'].forEach(id => $(id).disabled = locked || !hasPage);
+  ['enhanceIntensity','whitenIntensity','colorIntensity','printIntensity'].forEach(id => $(id).disabled = locked || !hasPage);
   updateSlidersVisibility();
 }
 function updateSlidersVisibility(){
   const mode = $('mode').value;
-  $('enhancePanel').style.display = (mode === 'none' || mode === 'color') ? 'none' : '';
-  $('grayPanel').style.display    = (mode === 'none' || mode === 'gray' || mode === 'bw' || mode === 'print') ? 'none' : '';
-  $('whitenPanel').style.display  = (mode === 'none' || mode === 'bw') ? 'none' : '';
+  $('enhancePanel').style.display = (mode === 'bw')    ? '' : 'none';
+  $('whitenPanel').style.display  = (mode === 'bw')    ? '' : 'none';
+  $('colorPanel').style.display   = (mode === 'color') ? '' : 'none';
 }
 function nextPaint(){ return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }
 function onModeChange(){ updateSlidersVisibility(); processCurrent(); }
@@ -1331,32 +1332,118 @@ overlay.addEventListener('contextmenu', e => {
 });
 
 /* ---------------- Rotate / Flip / Reset ---------------- */
+/* ---------- محاسبه ابعاد canvas بر اساس چرخش/آینه ---------- */
+function getSourceDimsFor(page){
+  const img = page.img;
+  const rot = page.rotation % 360;
+  const swap = rot === 90 || rot === 270;
+  const w = swap ? img.naturalHeight : img.naturalWidth;
+  const h = swap ? img.naturalWidth  : img.naturalHeight;
+  const max = 1800, sc = Math.min(1, max / Math.max(w, h));
+  return { w: Math.round(w * sc), h: Math.round(h * sc) };
+}
+
+/* ---------- تبدیل مختصات نقاط با چرخش/آینه ----------
+   نقاط رو جوری جابجا می‌کنه که روی همون پیکسل تصویر بمونن */
+function applyTransformToPoints(p, oldW, oldH, newW, newH,
+                                oldRot, newRot, oldFH, newFH, oldFV, newFV){
+  if (!p.corners) return;
+  const oldCorners = p.corners.map(c => ({ x: c.x, y: c.y }));
+
+  const cx_o = oldW / 2, cy_o = oldH / 2;
+  const cx_n = newW / 2, cy_n = newH / 2;
+  const th_o = oldRot * Math.PI / 180;
+  const th_n = newRot * Math.PI / 180;
+  const cos_o = Math.cos(th_o), sin_o = Math.sin(th_o);
+  const cos_n = Math.cos(th_n), sin_n = Math.sin(th_n);
+
+  function tf(px, py){
+    const a = px - cx_o, b = py - cy_o;
+    const c =  cos_o * a + sin_o * b;
+    const d = -sin_o * a + cos_o * b;
+    const ix = oldFH ? -c : c;
+    const iy = oldFV ? -d : d;
+    const a2 = newFH ? -ix : ix;
+    const b2 = newFV ? -iy : iy;
+    const c2 = cos_n * a2 - sin_n * b2;
+    const d2 = sin_n * a2 + cos_n * b2;
+    return { x: cx_n + c2, y: cy_n + d2 };
+  }
+
+  p.corners = oldCorners.map(c => tf(c.x, c.y));
+
+  if (p.midpoints && p.midpoints.length){
+    p.midpoints = p.midpoints.map(mp => {
+      const start_o = oldCorners[mp.edge];
+      const end_o   = oldCorners[(mp.edge + 1) % 4];
+      const dx_o = end_o.x - start_o.x, dy_o = end_o.y - start_o.y;
+      const len_o = Math.hypot(dx_o, dy_o) || 1;
+      const nx_o = -dy_o / len_o, ny_o = dx_o / len_o;
+      const wx = start_o.x + dx_o * mp.t + nx_o * mp.n;
+      const wy = start_o.y + dy_o * mp.t + ny_o * mp.n;
+
+      const np = tf(wx, wy);
+
+      const start_n = p.corners[mp.edge];
+      const end_n   = p.corners[(mp.edge + 1) % 4];
+      const dx_n = end_n.x - start_n.x, dy_n = end_n.y - start_n.y;
+      const len2 = dx_n * dx_n + dy_n * dy_n || 1;
+      const len_n = Math.sqrt(len2);
+      const nx_n = -dy_n / len_n, ny_n = dx_n / len_n;
+      const relX = np.x - start_n.x, relY = np.y - start_n.y;
+      const t_new = (relX * dx_n + relY * dy_n) / len2;
+      const n_new = relX * nx_n + relY * ny_n;
+      return { edge: mp.edge, t: t_new, n: n_new };
+    });
+  }
+}
+
+/* ---------------- Rotate / Flip / Reset ---------------- */
 function rotateLeft(){
   if (current < 0 || busy) return;
   const p = pages[current];
+  const oldW = source.width, oldH = source.height;
+  const oldRot = p.rotation, oldFH = p.flipH, oldFV = p.flipV;
   p.rotation = (p.rotation - 90 + 360) % 360;
-  p.corners = null; p.midpoints = [];
+  const nd = getSourceDimsFor(p);
+  applyTransformToPoints(p, oldW, oldH, nd.w, nd.h,
+                         oldRot, p.rotation, oldFH, p.flipH, oldFV, p.flipV);
   drawSource(); renderPages();
 }
 function rotateRight(){
   if (current < 0 || busy) return;
   const p = pages[current];
+  const oldW = source.width, oldH = source.height;
+  const oldRot = p.rotation, oldFH = p.flipH, oldFV = p.flipV;
   p.rotation = (p.rotation + 90) % 360;
-  p.corners = null; p.midpoints = [];
+  const nd = getSourceDimsFor(p);
+  applyTransformToPoints(p, oldW, oldH, nd.w, nd.h,
+                         oldRot, p.rotation, oldFH, p.flipH, oldFV, p.flipV);
   drawSource(); renderPages();
 }
 function flipH(){
   if (current < 0 || busy) return;
   const p = pages[current];
-  p.flipH = !p.flipH; p.corners = null; p.midpoints = [];
+  const oldW = source.width, oldH = source.height;
+  const oldRot = p.rotation, oldFH = p.flipH, oldFV = p.flipV;
+  p.flipH = !p.flipH;
+  const nd = getSourceDimsFor(p);
+  applyTransformToPoints(p, oldW, oldH, nd.w, nd.h,
+                         oldRot, p.rotation, oldFH, p.flipH, oldFV, p.flipV);
   drawSource(); renderPages();
 }
 function flipV(){
   if (current < 0 || busy) return;
   const p = pages[current];
-  p.flipV = !p.flipV; p.corners = null; p.midpoints = [];
+  const oldW = source.width, oldH = source.height;
+  const oldRot = p.rotation, oldFH = p.flipH, oldFV = p.flipV;
+  p.flipV = !p.flipV;
+  const nd = getSourceDimsFor(p);
+  applyTransformToPoints(p, oldW, oldH, nd.w, nd.h,
+                         oldRot, p.rotation, oldFH, p.flipH, oldFV, p.flipV);
   drawSource(); renderPages();
 }
+
 function resetCorners(){
   if (current < 0) return;
   const p = pages[current];
@@ -1466,48 +1553,75 @@ function invertColors(img){
     d[i+2] = 255 - d[i+2];
   }
 }
+
 function applyEffects(img, mode, w, h){
   const d = img.data;
   if (mode === 'none'){
     if ($('invertToggle').checked) invertColors(img);
     return;
   }
-  const enhInt    = (Number($('enhanceIntensity').value) - 1) / 99;
-  const grayInt   = (Number($('grayIntensity').value)    - 1) / 99;
-  const whitenInt = (Number($('whitenIntensity').value)  - 1) / 99;
 
-  const forceGray = (mode === 'gray' || mode === 'bw' || mode === 'print');
-  const gmix = forceGray ? 1 : grayInt;
-
-  if (gmix > 0){
+  if (mode === 'bw'){
+    // خاکستری ۱۰۰٪ (اسلایدر حذف شده)
     for (let i = 0; i < d.length; i += 4){
       const y = .299 * d[i] + .587 * d[i+1] + .114 * d[i+2];
-      if (gmix >= 1){ d[i] = d[i+1] = d[i+2] = y; }
-      else {
-        d[i]   = d[i]   * (1 - gmix) + y * gmix;
-        d[i+1] = d[i+1] * (1 - gmix) + y * gmix;
-        d[i+2] = d[i+2] * (1 - gmix) + y * gmix;
-      }
-    }
-  }
-  if (mode !== 'color' && enhInt > 0.001){
-    autoLevels(img, 1 - 0.14 * enhInt);
-    sharpen(img, w, h, 0.11 * enhInt);
-  }
-  if (whitenInt > 0.001 && mode !== 'bw'){
-    whitenPaper(img, whitenInt);
-  }
-  if (mode === 'bw'){
-    const th = otsu(img);
-    for (let i = 0; i < d.length; i += 4){
-      const y = d[i] > th ? 255 : 0;
       d[i] = d[i+1] = d[i+2] = y;
     }
+    const enhInt = (Number($('enhanceIntensity').value) - 1) / 99;
+    if (enhInt > 0.001){
+      autoLevels(img, 1 - 0.14 * enhInt);
+      sharpen(img, w, h, 0.11 * enhInt);
+    }
+    const whitenInt = (Number($('whitenIntensity').value) - 1) / 99;
+    if (whitenInt > 0.001){
+      whitenPaper(img, whitenInt);
+    }
+  } else if (mode === 'color'){
+    // میزان رنگ: -100 تا +100  →  ضریب اشباع 0 تا 2
+    const colorVal = Number($('colorIntensity').value);
+    const satMul = 1 + colorVal / 100;
+    if (Math.abs(satMul - 1) > 0.001){
+      for (let i = 0; i < d.length; i += 4){
+        const r = d[i], g = d[i+1], b = d[i+2];
+        const y = .299 * r + .587 * g + .114 * b;
+        d[i]   = Math.max(0, Math.min(255, y + (r - y) * satMul));
+        d[i+1] = Math.max(0, Math.min(255, y + (g - y) * satMul));
+        d[i+2] = Math.max(0, Math.min(255, y + (b - y) * satMul));
+      }
+    }
+    // کیفیت پرینت: auto-levels + شارپن ملایم
+    const printInt = Number($('printIntensity').value) / 100;
+    if (printInt > 0.001){
+      autoLevels(img, 1 - 0.10 * printInt);
+      sharpen(img, w, h, 0.08 * printInt);
+    }
   }
+
   if ($('invertToggle').checked){
     invertColors(img);
   }
 }
+
+
+/* ---------- چرخش و آینه کردن خودِ خروجی ---------- */
+function applyRotationFlipToCanvas(cv, rotation, flipH, flipV){
+  const rot = ((rotation % 360) + 360) % 360;
+  if (rot === 0 && !flipH && !flipV) return cv;
+
+  const swap = rot === 90 || rot === 270;
+  const out = document.createElement('canvas');
+  out.width  = swap ? cv.height : cv.width;
+  out.height = swap ? cv.width  : cv.height;
+  const ctx = out.getContext('2d');
+  ctx.save();
+  ctx.translate(out.width / 2, out.height / 2);
+  ctx.rotate(rot * Math.PI / 180);
+  ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  ctx.drawImage(cv, -cv.width / 2, -cv.height / 2);
+  ctx.restore();
+  return out;
+}
+
 
 /* ---------------- Process ---------------- */
 function processedCanvas(){
@@ -1550,7 +1664,7 @@ function processedCanvas(){
   }
   applyEffects(dst, $('mode').value, w, h);
   cx.putImageData(dst, 0, 0);
-  return cv;
+  return applyRotationFlipToCanvas(cv, page.rotation, page.flipH, page.flipV);
 }
 function bilinear(sd, sw, sh, sx, sy, dd, di){
   sx = Math.max(0, Math.min(sw - 1, sx));
@@ -1749,11 +1863,28 @@ async function printPdf(){
 
 /* ---------------- Init ---------------- */
 $('enhanceValue').textContent = $('enhanceIntensity').value;
-$('grayValue').textContent    = $('grayIntensity').value;
 $('whitenValue').textContent  = $('whitenIntensity').value;
+$('colorValue').textContent   = $('colorIntensity').value;
+$('printValue').textContent   = $('printIntensity').value;
 $('qualityValue').textContent = $('qualitySlider').value;
 $('sizeValue').textContent    = $('sizeSlider').value;
 refreshControls();
+
+/* ---------- مخفی‌کردن راهنمای پایین وقتی موس نزدیک می‌شود ---------- */
+(function setupHintAutoHide(){
+  const shell = $('shell');
+  const hint  = document.querySelector('.hint');
+  if (!shell || !hint) return;
+  shell.addEventListener('pointermove', e => {
+    const r = hint.getBoundingClientRect();
+    const pad = 28;
+    const near = e.clientX >= r.left - pad && e.clientX <= r.right + pad &&
+                 e.clientY >= r.top  - pad && e.clientY <= r.bottom + pad;
+    hint.classList.toggle('hint-hidden', near);
+  });
+  shell.addEventListener('pointerleave', () => hint.classList.remove('hint-hidden'));
+})();
+
 </script>
 </body>
 </html>

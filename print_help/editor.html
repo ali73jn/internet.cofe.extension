@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ویرایشگر</title>
+<style>
+:root{
+  --bg:#f4f7fb;
+  --card:#fff;
+  --text:#182236;
+  --muted:#728096;
+  --line:#e3e9f3;
+  --p:#4f46e5;
+  --p2:#7c3aed;
+  --ok:#0f9d72;
+  --bad:#d9364f;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{
+  font-family:Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+}
+button,input,select{font:inherit}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 2px 10px rgba(15,23,42,.04);
+  z-index:10;
+}
+.tb-tools,.tb-right{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.tb-right{margin-inline-start:auto}
+.tb-sep{
+  width:1px;height:22px;
+  background:var(--line);
+  margin:0 4px;
+  flex:0 0 auto;
+}
+.tb-spacer{ flex:1 1 auto; min-width:16px; }
+.tbtn{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f7f9fc;
+  color:#374151;
+  font-weight:800;
+  font-size:11px;
+  cursor:pointer;
+  transition:.15s;
+  white-space:nowrap;
+}
+.tbtn:hover:not(:disabled){background:#eef2ff;border-color:#c7cdf5;transform:translateY(-1px)}
+.tbtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.tbtn.primary{
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;border-color:transparent;
+  box-shadow:0 5px 14px rgba(79,70,229,.22);
+}
+.tbtn.primary:hover:not(:disabled){filter:brightness(1.05)}
+.tbtn.danger{background:#fff0f2;color:#b8243d;border-color:#fbd0d7}
+.tbtn.danger:hover:not(:disabled){background:#ffe1e6}
+/* جایگزین #dlJpg,#dlPng قبلی */
+.tbtn.green{
+  background:#def7ed;
+  color:#087358;
+  border-color:transparent;
+}
+.tbtn.green:hover:not(:disabled){ background:#c8f0df; }
+#dlPdf{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}
+#dlPdf:hover:not(:disabled){filter:brightness(1.06)}
+#printBtn{background:linear-gradient(135deg,#0891b2,#0ea5e9);color:#fff;border-color:transparent}
+#printBtn:hover:not(:disabled){filter:brightness(1.06)}
+
+.tb-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f7f9fc;
+  color:#374151;
+  font-weight:800;
+  font-size:11px;
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+  transition:.15s;
+}
+.tb-toggle:hover{border-color:#c7cdf5;background:#eef2ff}
+.tb-toggle input[type=checkbox]{
+  -webkit-appearance:none;appearance:none;
+  width:28px;height:15px;border-radius:999px;
+  background:#cbd5e1;position:relative;cursor:pointer;
+  transition:.2s;margin:0;flex:0 0 auto;
+}
+.tb-toggle input[type=checkbox]::after{
+  content:'';position:absolute;top:1.5px;right:1.5px;
+  width:12px;height:12px;border-radius:50%;
+  background:#fff;transition:.2s;
+}
+.tb-toggle input[type=checkbox]:checked{background:linear-gradient(135deg,var(--p),var(--p2))}
+.tb-toggle input[type=checkbox]:checked::after{right:14.5px}
+.tb-toggle input[type=checkbox]:disabled{opacity:.5;cursor:not-allowed}
+.tb-toggle.active{color:#4f46e5;border-color:#c7cdf5;background:#f5f6ff}
+
+.mini-select{
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f7f9fc;
+  font-size:11px;
+  font-weight:800;
+  color:#374151;
+  cursor:pointer;
+  transition:.15s;
+}
+.mini-select:hover:not(:disabled){background:#eef2ff;border-color:#c7cdf5}
+.mini-select:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- Layout ---------- */
+.layout{
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:65% 35%;
+  direction:ltr;
+  overflow:hidden;
+}
+.layout>*{direction:rtl}
+
+.left{
+  position:relative;
+  min-width:0;min-height:0;
+  padding:12px;
+  overflow:hidden;
+}
+.canvas-shell{
+  position:relative;
+  width:100%;height:100%;
+  border-radius:14px;
+  overflow:hidden;
+  background:repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/18px 18px;
+  user-select:none;
+  transition:outline .15s,background .15s;
+}
+.canvas-shell.drag-over{
+  outline:3px dashed #4f46e5;
+  outline-offset:-8px;
+  background:
+    linear-gradient(rgba(79,70,229,.06),rgba(79,70,229,.06)),
+    repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/18px 18px;
+}
+.canvas-wrap{
+  position:absolute;top:0;left:0;
+  transform-origin:0 0;
+  will-change:width,height,transform;
+}
+.canvas-wrap canvas{display:block;width:100%;height:100%}
+.overlay{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  touch-action:none;
+}
+.empty{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  padding:24px;z-index:4;
+}
+.empty-inner{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  text-align:center;color:var(--muted);pointer-events:none;
+}
+.empty-icon{font-size:46px;opacity:.45;line-height:1}
+.empty-title{font-size:14px;font-weight:800;color:var(--text)}
+.empty-sub{font-size:11px;line-height:1.6}
+.empty-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:11px 20px;border:0;border-radius:11px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;font-weight:900;font-size:12.5px;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(79,70,229,.26);
+  transition:.15s;margin-top:8px;pointer-events:auto;
+}
+.empty-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.hint{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  font-size:10px;
+  color:var(--muted);
+  font-weight:800;
+  padding:6px 10px;
+  border-radius:9px;
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  pointer-events:none;
+  backdrop-filter:blur(6px);
+  z-index:5;
+  line-height:1.7;
+  text-align:right;
+  direction:rtl;
+  transition:opacity .15s;        /* ← اضافه شود */
+}
+.hint.hint-hidden{ opacity:0; }   /* ← اضافه شود */
+
+.hint-line{display:block;white-space:nowrap}
+
+.right{
+  min-width:0;min-height:0;
+  display:flex;flex-direction:column;
+  background:#fff;
+  border-left:1px solid var(--line);
+  overflow:hidden;
+}
+.right-top{flex:0 0 auto;padding:12px 12px 0}
+.right-scroll{
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+  padding:10px 12px 12px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.panel{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fbfcfe;
+}
+.panel h3{
+  margin:0 0 9px;
+  font-size:11.5px;font-weight:800;color:#475569;
+}
+
+.output-box{
+  position:relative;
+  height:340px;
+  border-radius:11px;
+  overflow:hidden;
+  background:repeating-conic-gradient(#e9edf4 0 25%,#f7f9fc 0 50%) 50%/16px 16px;
+}
+.output-empty{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  color:var(--muted);font-size:11px;
+  text-align:center;padding:20px 10px;line-height:1.9;
+  pointer-events:none;
+}
+.output-box.has-output .output-empty{display:none}
+.output-canvas-wrap{
+  position:absolute;inset:0;display:none;
+  overflow:hidden;touch-action:none;user-select:none;
+}
+.output-box.has-output .output-canvas-wrap{display:block}
+.output-canvas-wrap canvas{
+  position:absolute;top:0;left:0;
+  display:block;max-width:none;max-height:none;
+  transform-origin:0 0;
+  will-change:transform;
+  box-shadow:0 6px 20px rgba(15,23,42,.12);
+  background:#fff;
+}
+.output-zoom-hint{
+  position:absolute;bottom:6px;left:6px;
+  font-size:9px;font-weight:800;color:var(--muted);
+  background:rgba(255,255,255,.88);
+  padding:3px 7px;border-radius:6px;
+  pointer-events:none;display:none;
+  direction:rtl;z-index:3;
+}
+.output-box.has-output .output-zoom-hint{display:block}
+.output-box.has-output .output-canvas-wrap{cursor:grab}
+.output-box.panning .output-canvas-wrap{cursor:grabbing}
+
+.pages{display:grid;gap:6px;max-height:100%;overflow-y:auto;padding:2px}
+.page{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  cursor:grab;
+  transition:border-color .15s,background .15s;
+  user-select:none;
+}
+.page:hover{border-color:#c7cdf5}
+.page.active{border-color:#858af0;background:#f2f2ff}
+.page.dragging{opacity:.45;cursor:grabbing}
+.page.drop-target{border-color:#4f46e5;border-style:dashed;background:#eef2ff}
+.page span{
+  width:24px;height:24px;border-radius:7px;
+  background:#eef2ff;display:grid;place-items:center;
+  font-weight:900;font-size:11px;flex:0 0 auto;color:#4338ca;
+}
+.page div{min-width:0;flex:1}
+.page b{
+  font-size:11px;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;
+}
+.page small{font-size:9px;color:var(--muted)}
+.page .rm{
+  padding:3px 7px;border:0;border-radius:7px;
+  background:#fff0f2;color:#b8243d;
+  font-weight:900;font-size:12px;cursor:pointer;
+}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .right{border-left:0;border-top:1px solid var(--line)}
+  .output-box{height:200px}
+}
+</style>
+</head>
+<body>
+
+<header class="toolbar">
+  <div class="tb-tools">
+    <label class="tbtn primary">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+      <span>📂 باز کردن</span>
+    </label>
+    <button class="tbtn" id="rotLBtn" disabled>↶ چپ</button>
+    <button class="tbtn" id="rotRBtn" disabled>↷ راست</button>
+    <button class="tbtn" id="flipHBtn" disabled>⇄ افقی</button>
+    <button class="tbtn" id="flipVBtn" disabled>⇅ عمودی</button>
+    <button class="tbtn" id="resetBtn" disabled>▣ بازنشانی</button>
+    <button class="tbtn" id="zoomResetBtn" disabled>🔍 زوم</button>
+    <button class="tbtn" id="zoomFitBtn" disabled>🎯 نقاط</button>
+
+    <div class="tb-sep"></div>
+
+    <label class="tb-toggle" id="enhanceLabel" title="بهبود هوشمند تصویر">
+      <input type="checkbox" id="enhanceToggle" checked>
+      <span>✨ بهبود</span>
+    </label>
+    <label class="tb-toggle" id="invertLabel" title="رنگ معکوس">
+      <input type="checkbox" id="invertToggle">
+      <span>🌓 معکوس</span>
+    </label>
+  </div>
+
+  <div class="tb-right">
+    <select class="mini-select" id="paper" title="اندازه PDF">
+      <option value="a4-portrait" selected>A4 عمودی</option>
+      <option value="a4-landscape">A4 افقی</option>
+      <option value="a5-portrait">A5 عمودی</option>
+      <option value="a5-landscape">A5 افقی</option>
+    </select>
+
+    <button class="tbtn" id="printBtn" disabled>🖨️ پرینت</button>
+    <button class="tbtn" id="dlPdf" disabled>📄 PDF</button>
+    <button class="tbtn green" id="dlJpg" disabled>🖼️ JPG</button>
+    <button class="tbtn green" id="dlAllJpg" disabled>💾 ذخیره همه</button>
+    <button class="tbtn danger" id="closeBtn" disabled>✕ بستن</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="left">
+    <div class="canvas-shell" id="shell">
+      <div class="empty" id="empty">
+        <div class="empty-inner">
+          <div class="empty-icon">📄</div>
+          <div class="empty-title">یک یا چند عکس انتخاب کنید</div>
+          <div class="empty-sub">یا فایل‌ها را اینجا رها کنید (Drag &amp; Drop)</div>
+          <button type="button" class="empty-btn" id="emptyOpenBtn">
+            📂 باز کردن فایل
+          </button>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap" style="display:none">
+        <canvas id="sourceCanvas"></canvas>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+      <div class="hint">
+        <span class="hint-line">💡 کلیک روی لبه = نقطه</span>
+        <span class="hint-line">   راست‌کلیک = حذف</span>
+      </div>
+    </div>
+  </section>
+
+  <aside class="right">
+    <div class="right-top">
+      <div class="panel">
+        <div class="output-box" id="outputBox">
+          <div class="output-empty" id="outputEmpty">پیش‌نمایش خروجی</div>
+          <div class="output-canvas-wrap" id="outputCanvasWrap">
+            <canvas id="outputCanvas"></canvas>
+          </div>
+          <div class="output-zoom-hint">🔍 اسکرول = زوم • دابل‌کلیک = بازنشانی</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-scroll">
+      <div class="panel">
+        <h3>صفحه‌ها (برای جابه‌جایی، بکشید)</h3>
+        <div class="pages" id="pages"></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script src="editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+@page {
+  size: A4 landscape;   /* قبلاً A5 portrait بود */
+  margin: 8mm;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif;
+  color: #263238;
+  background: #eef1f4;
+}
+
+/* صفحه A5 توی پیش‌نمایش */
+.page {
+  width: 297mm;         /* قبلاً 148mm بود — A4 landscape */
+  min-height: 210mm;    /* قبلاً 210mm بود */
+  margin: 16px auto;
+  background: #fff;
+  padding: 8mm;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* عنوان کارت */
+.page h6 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #37474f;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #546e7a;
+  text-align: right;
+}
+
+/* نوار ابزار داخلی جدول (فقط عنوانش بمونه) */
+.DataTable-Toolbar {
+  display: block !important;
+  min-height: auto !important;
+  padding: 0 0 8px !important;
+  background: transparent !important;
+}
+.DataTable-Toolbar-Title {
+  font-size: 11pt !important;
+  font-weight: 700 !important;
+  color: #546e7a !important;
+}
+.Space { display: none !important; }
+
+/* جدول */
+table.DataTable-Table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  direction: rtl;
+  margin-top: 4px;
+  table-layout: auto;
+}
+
+table.DataTable-Table th,
+table.DataTable-Table td {
+  border: 1px solid #cfd8dc !important;
+  padding: 6px 8px !important;
+  font-size: 9pt !important;
+  text-align: right !important;
+  vertical-align: middle !important;
+  color: #37474f !important;
+  line-height: 1.5;
+}
+
+table.DataTable-Table thead th {
+  background: #eceff1 !important;
+  font-weight: 700 !important;
+  color: #37474f !important;
+  text-align: center !important;
+}
+
+table.DataTable-Table tbody tr:nth-child(even) td {
+  background: #fafafa !important;
+}
+
+table.DataTable-Table tbody tr:hover td {
+  background: transparent !important;
+}
+
+
+/* ---------- پلاک خودرو با اسلات‌های ثابت ---------- */
+.platefontInput.readOnly {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px solid #546e7a !important;
+  border-radius: 4px;
+  padding: 3px 6px;
+  background: #fff;
+  margin: 0 auto;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.plate-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #263238;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* پرچم */
+.slot-flag { width: 22px; }
+.slot-flag img {
+  display: block;
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  border-radius: 1.5px;
+  box-shadow: 0 0 1px rgba(0,0,0,.35);
+}
+
+/* ۲ رقم سمت چپ پلاک */
+.slot-two { width: 24px; letter-spacing: 0.5px; }
+
+/* حرف فارسی (ط ، ص ، ...) - عرض ثابت تا bidi خرابش نکنه */
+.slot-letter {
+  width: 20px;
+  font-size: 11pt;
+  unicode-bidi: bidi-override;
+  direction: ltr;
+}
+
+/* ۳ رقم وسط */
+.slot-three { width: 34px; letter-spacing: 0.5px; }
+
+/* ۲ رقم استان (سمت راست، با خط جداکننده) */
+.slot-province {
+  width: 24px;
+  letter-spacing: 0.5px;
+  border-left: 1px solid #cfd8dc;
+  padding-left: 6px;
+}
+
+/* نوار ابزار پایین صفحه (فقط توی پیش‌نمایش) */
+.toolbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.toolbar button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 22px;
+  font-family: inherit;
+  font-size: 11pt;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toolbar button:hover { background: #1565c0; }
+
+/* قوانین چاپ */
+@media print {
+  html, body {
+    background: #fff !important;
+    width: auto;
+  }
+  .page {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .no-print, .toolbar {
+    display: none !important;
+  }
+}
+
+/* ---------- هدر پروفایل ---------- */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+}
+
+.profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #263238;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+.profile-role {
+  font-size: 9.5pt;
+  color: #546e7a;
+  line-height: 1.4;
+}
+
+
+/* ---------- پلاک موتورسیکلت ---------- */
+.motor.plate-motor {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  border: 1.5px solid #546e7a !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  background: #fff;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  margin: 0 auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  min-width: 84px;
+}
+
+.motor-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 2px 6px;
+  gap: 4px;
+}
+
+.motor-row.top {
+  border-bottom: 1.5px solid #546e7a;  /* خط جداکنندهٔ وسط قاب */
+}
+
+.motor-digits {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #263238;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.motor-sep {
+  width: 1px;
+  height: 14px;
+  background: #cfd8dc;
+  flex-shrink: 0;
+}
+
+.motor-flag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.motor-flag img {
+  display: block;
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  border-radius: 1.5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.35);
+}

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "همیار کافینت",
-  "version": "19",
+  "version": "24",
   "description": "مدیریت پیشرفته بوکمارک ها",
 
   "icons": {
@@ -17,7 +17,10 @@
   "permissions": [
     "storage",
     "bookmarks",
-    "tabs"
+    "tabs",
+    "downloads",
+    "scripting",
+    "contextMenus"
   ],
 
   "host_permissions": [
@@ -26,19 +29,56 @@
     "file:///*"
   ],
 
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  "background": {
+    "service_worker": "background.js"
   },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.rubika.ir/*",
+        "https://web.eitaa.com/*",
+        "https://web.shad.ir/*",
+        "https://shadweb.iranlms.ir/*",
+        "https://web.bale.ai/*"
+      ],
+      "js": ["print_help/main.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://web.rubika.ir/*",
+        "https://web.eitaa.com/*",
+        "https://web.shad.ir/*",
+        "https://shadweb.iranlms.ir/*",
+        "https://web.bale.ai/*"
+      ],
+      "js": ["print_help/content.js"],
+      "css": ["print_help/content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["print_help/context-image.js"],
+      "css": ["print_help/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
 
   "web_accessible_resources": [
     {
       "resources": [
         "PerspectiveCrop/index.html",
-        "PerspectiveCrop/libs/opencv.js"
+        "PerspectiveCrop/libs/opencv.js",
+        "print_help/editor.html",
+        "print_help/editor.js"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
-  ]
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
 }

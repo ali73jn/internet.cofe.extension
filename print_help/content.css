@@ -1,0 +1,156 @@
+#rubika-print-action-bar {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    background: rgba(20, 25, 40, .92);
+    color: #fff;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+    z-index: 2147483646;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    direction: ltr;
+}
+#rubika-print-action-bar.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+}
+#rubika-print-action-bar button {
+    border: 0;
+    border-radius: 9px;
+    padding: 7px 11px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    color: #fff;
+    background: #2a3550;
+    transition: background .15s, transform .1s;
+}
+#rubika-print-action-bar button:hover:not(:disabled) {
+    background: #38466b;
+    transform: translateY(-1px);
+}
+#rubika-print-action-bar button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+#rubika-print-action-bar .rp-count {
+    padding: 0 6px;
+    font-weight: 800;
+    color: #cfd6e6;
+    white-space: nowrap;
+}
+#rubika-print-action-bar .primary {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+#rubika-print-action-bar .primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+#rubika-print-action-bar .rp-edit {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+#rubika-print-action-bar .rp-edit:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+#rubika-print-action-bar .rp-download {
+    background: linear-gradient(135deg, #0891b2, #0ea5e9);
+}
+#rubika-print-action-bar .rp-download:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+#rubika-print-action-bar .ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .2);
+}
+#rubika-print-action-bar .ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, .08);
+}
+
+/* ---------- دکمه‌های روی هر عکس ---------- */
+.my-rubika-print-controls {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+    direction: ltr;
+}
+.my-rubika-print-controls button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(20, 25, 40, .78);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+    transition: background .15s, transform .1s;
+}
+/* مقیاس‌دادن روی هاور برای همه‌ی دکمه‌ها */
+.my-rubika-print-controls button:hover:not(:disabled) {
+    transform: scale(1.08);
+}
+/* پس‌زمینه‌ی تیره‌ی هاور فقط برای دکمه‌های تیک‌نخورده */
+.my-rubika-print-controls button:not(.selected):hover:not(:disabled) {
+    background: rgba(20, 25, 40, .95);
+}
+.my-rubika-print-controls button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+.my-rubika-print-controls .my-select-btn {
+    background: rgba(60, 60, 70, .78);
+}
+/* تیک‌خورده: سبز در همه‌ی حالت‌ها (عادی + هاور) */
+.my-rubika-print-controls .my-select-btn.selected,
+.my-rubika-print-controls .my-select-btn.selected:hover:not(:disabled) {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .3),
+                0 0 0 2px rgba(16, 185, 129, .40);   /* حلقه‌ی سبز برای دیده‌شدن بیشتر */
+}
+
+/* ---------- Edit modal overlay ---------- */
+#rph-editor-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    background: rgba(15, 23, 42, .72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: rph-fade-in .18s ease;
+}
+@keyframes rph-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+#rph-editor-frame {
+    width: 98vw;
+    height: 96vh;
+    max-width: 1700px;
+    max-height: 1100px;
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+    background: #f4f7fb;
+    color-scheme: light;
+}
