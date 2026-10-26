@@ -1,3 +1,4 @@
+
 {
   "manifest_version": 3,
   "name": "همیار کافینت",
@@ -10,6 +11,10 @@
     "128": "icons/icon128.png"
   },
 
+  "action": {
+    "default_title": "Bookmark Manager"
+  },
+
   "chrome_url_overrides": {
     "newtab": "dashboard.html"
   },
@@ -20,7 +25,13 @@
     "tabs",
     "downloads",
     "scripting",
-    "contextMenus"
+    "contextMenus",
+    "activeTab",
+    "favicon"
+  ],
+
+  "optional_permissions": [
+    "clipboardRead"
   ],
 
   "host_permissions": [
@@ -42,7 +53,9 @@
         "https://shadweb.iranlms.ir/*",
         "https://web.bale.ai/*"
       ],
-      "js": ["print_help/main.js"],
+      "js": [
+        "print_help/main.js"
+      ],
       "world": "MAIN",
       "run_at": "document_start"
     },
@@ -50,18 +63,28 @@
       "matches": [
         "https://web.rubika.ir/*",
         "https://web.eitaa.com/*",
-        "https://web.shad.ir/*",
+        "https://web/shad.ir/*",
         "https://shadweb.iranlms.ir/*",
         "https://web.bale.ai/*"
       ],
-      "js": ["print_help/content.js"],
-      "css": ["print_help/content.css"],
+      "js": [
+        "print_help/content.js"
+      ],
+      "css": [
+        "print_help/content.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["<all_urls>"],
-      "js": ["print_help/context-image.js"],
-      "css": ["print_help/content.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "print_help/context-image.js"
+      ],
+      "css": [
+        "print_help/content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -74,7 +97,9 @@
         "print_help/editor.html",
         "print_help/editor.js"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
 

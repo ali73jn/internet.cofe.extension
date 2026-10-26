@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="index.css">
+  <title>Bookmark Manager</title>
+</head>
+<body>
+  <div id="app">
+    <aside id="properties">
+      <div class="empty">
+        <i class="empty-icon"></i>
+        <b>No selection</b>
+        <small>Select a bookmark or a folder to view and edit its details.</small>
+      </div>
+
+      <div class="hero">
+        <i class="hero-icon"></i>
+        <div class="hero-text">
+          <b dir="auto" data-id="hero-title"></b>
+          <small data-id="hero-sub"></small>
+        </div>
+      </div>
+
+      <div class="fields">
+        <div class="field" title="Press Enter to rename. Shift+Enter renames all selected.">
+          <label for="prop-title">Title</label>
+          <div class="input-group">
+            <input id="prop-title" dir="auto" type="text" name="title" autocomplete="off" spellcheck="false" disabled="true">
+            <button data-cmd="change-title" title="Apply title" disabled="true"></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="prop-url">Address</label>
+          <div class="input-group">
+            <input id="prop-url" type="text" name="url" autocomplete="off" spellcheck="false" disabled="true">
+            <button data-cmd="change-url" title="Apply address" disabled="true"></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Added</div>
+          <div class="meta" data-id="date"></div>
+        </div>
+      </div>
+
+      <div class="hint">
+        <kbd>Enter</kbd><span>Apply the change</span>
+        <kbd>Shift + Enter</kbd><span>Apply to all selected</span>
+        <kbd>Del</kbd><span>Delete selected</span>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header id="toolbar">
+        <span></span>
+        <div class="brand">Bookmarks</div>
+        <button type="button" data-cmd="collapse" title="Collapse all nodes">Collapse</button>
+        <button type="button" data-cmd="theme-toggle" title="Cycle theme: Auto / Light / Dark">Theme</button>
+        <button type="button" data-cmd="bookmark-manager" title="Open the browser bookmark manager">Bookmark Manager</button>
+      </header>
+
+      <div id="tree" tabindex="-1"></div>
+    </main>
+  </div>
+
+  <div id="notification">
+    <div>
+      <span></span>
+      <div>
+        <button data-cmd="no"><u>N</u>o</button>
+        <button data-cmd="yes"><u>Y</u>es</button>
+        <button data-cmd="ok"><u>O</u>K</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="jquery.js"></script>
+  <script src="jstree.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
