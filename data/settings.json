@@ -1,42 +1,56 @@
 {
-  "version": "1.0",
-  "exportedAt": "2026-08-29T16:58:41.803Z",
+  "version": "2.0",
+  "exportedAt": "2026-10-26T16:59:03.787Z",
   "layout": {
-    "ابزار ها": {
-      "col": 3,
-      "h": 13,
-      "row": 22,
+    "Imported": {
+      "col": 1,
+      "h": 6,
+      "row": 2,
       "view": "list",
-      "w": 22
+      "w": 8
+    },
+    "ابزار ها": {
+      "col": 1,
+      "h": 13,
+      "row": 23,
+      "view": "grid",
+      "w": 23
+    },
+    "جستجو": {
+      "col": 25,
+      "h": 3,
+      "row": 1,
+      "view": "list",
+      "w": 23
     },
     "خودم": {
-      "col": 3,
+      "col": 1,
       "h": 11,
-      "row": 37,
+      "row": 38,
       "view": "list",
-      "w": 70
+      "w": 72
     },
     "زمان و آب و هوا": {
-      "col": 27,
-      "h": 9,
+      "col": 25,
+      "h": 8,
       "mode": "full",
-      "row": 26,
+      "row": 28,
       "view": "list",
-      "w": 22
+      "w": 23
     },
     "سایت های پرکاربرد": {
-      "col": 3,
-      "h": 21,
+      "col": 1,
+      "h": 22,
       "row": 1,
       "view": "grid",
-      "w": 22
+      "w": 23
     },
     "سایت های کاربردی ": {
-      "col": 27,
-      "h": 25,
-      "row": 1,
+      "col": 25,
+      "h": 24,
+      "row": 4,
       "view": "list",
-      "w": 22
+      "w": 23
     },
     "سایر": {
       "col": 1,
@@ -46,18 +60,44 @@
       "w": 8
     },
     "شبکه اجتماعی": {
-      "col": 51,
-      "h": 21,
+      "col": 49,
+      "h": 22,
       "row": 1,
       "view": "grid",
-      "w": 22
+      "w": 23
     },
     "فیلم و سریال": {
-      "col": 51,
+      "col": 49,
       "h": 13,
-      "row": 22,
-      "view": "list",
-      "w": 22
+      "row": 23,
+      "view": "grid",
+      "w": 23
     }
-  }
+  },
+  "theme": "dark",
+  "settings": null,
+  "zoomLevel": 100,
+  "backgroundBlur": 0,
+  "searchMode": "card",
+  "selectedFont": "IRANSans",
+  "dimensions": {
+    "breadcrumbsHeight": 0,
+    "cardHeaderHeight": 0,
+    "gridCompactness": 0,
+    "gridModeGap": 0,
+    "gridTileHeight": 0,
+    "listCompactness": 100,
+    "listModeGap": 0,
+    "listTileHeight": 0,
+    "rightMargin": 0,
+    "searchCardHeight": 0,
+    "toolbarWidth": 0,
+    "topMargin": 0
+  },
+  "selectedCity": {
+    "coordinates": "34.78187,47.59945",
+    "fullName": "سنقر، كرمانشاه‎، ایران",
+    "name": "سنقر، كرمانشاه‎، ایران"
+  },
+  "customUrls": null
 }

@@ -26,8 +26,8 @@ const CONFIG = {
     },
 	
 	ONLINE: {
-        BOOKMARKS_URL: "https://raw.githubusercontent.com/ali73jn/extension/refs/heads/main/bookmarks.json",
-        SETTINGS_URL: "https://raw.githubusercontent.com/ali73jn/extension/refs/heads/main/settings.json" 
+        BOOKMARKS_URL: "https://raw.githubusercontent.com/ali73jn/internet.cofe.extension/refs/heads/main/data/bookmarks.json",
+        SETTINGS_URL: "https://raw.githubusercontent.com/ali73jn/internet.cofe.extension/refs/heads/main/data/settings.json" 
     }
 };
 
@@ -1230,6 +1230,7 @@ class ImportExportManager {
 			return null;
 		}
 	}
+
 	static async importBookmarksOnline(silent = false) {
 		const importedData = await this.fetchJsonFromUrl(CONFIG.ONLINE.BOOKMARKS_URL);
 		if (!importedData) return false;
@@ -1239,19 +1240,7 @@ class ImportExportManager {
 			return await BookmarkManager.importBookmarks(bookmarksArray, true);
 		} catch (error) { console.error('خطا:', error); return false; }
 	}
-	static async importSettingsOnline(silent = false) {
-		const importedData = await this.fetchJsonFromUrl(CONFIG.ONLINE.SETTINGS_URL);
-		if (!importedData) return false;
-		try {
-			let layout = null;
-			if (importedData.layout) layout = importedData.layout;
-			else if (importedData && typeof importedData === 'object' && !importedData.bookmarks) layout = importedData;
-			if (!layout) throw new Error('اطلاعات چیدمان یافت نشد');
-			state.layoutMap = layout;
-			await StorageManager.set(CONFIG.STORAGE_KEYS.LAYOUT, state.layoutMap);
-			return true;
-		} catch (error) { console.error('خطا:', error); return false; }
-	}
+
 	static async importBookmarksLocal(silent = false) {
 		try {
 			const localUrl = chrome.runtime.getURL('data/bookmarks.json');
@@ -1263,21 +1252,180 @@ class ImportExportManager {
 			return await BookmarkManager.importBookmarks(bookmarksArray, true);
 		} catch (error) { console.error('❌ خطا:', error); return false; }
 	}
+
+	// ============================================================
+	// ⭐ متد مشترک: اعمال داده‌های تنظیمات (قدیمی + جدید)
+	// ============================================================
+	static async applySettingsData(importedData) {
+		if (!importedData || typeof importedData !== 'object') {
+			throw new Error('داده تنظیمات نامعتبر است');
+		}
+
+		// ---- سازگاری با فرمت قدیمی (فقط layoutMap خام) ----
+		const isOldFormat = !importedData.version
+			&& !importedData.layout
+			&& !importedData.bookmarks
+			&& !importedData.theme
+			&& typeof importedData.zoomLevel !== 'number'
+			&& !importedData.selectedFont
+			&& !importedData.dimensions
+			&& !importedData.searchMode;
+
+		if (isOldFormat) {
+			state.layoutMap = importedData;
+			await StorageManager.set(CONFIG.STORAGE_KEYS.LAYOUT, state.layoutMap);
+			return;
+		}
+
+		// ---- فرمت جدید ----
+		const writes = [];
+
+		if (importedData.layout) {
+			state.layoutMap = importedData.layout;
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.LAYOUT, importedData.layout));
+		}
+		if (importedData.theme) {
+			state.isDarkMode = importedData.theme === 'dark';
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.THEME, importedData.theme));
+		}
+		if (importedData.settings) {
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.SETTINGS, importedData.settings));
+		}
+		if (typeof importedData.zoomLevel === 'number') {
+			state.zoomLevel = Math.max(75, Math.min(125, importedData.zoomLevel));
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.ZOOM_LEVEL, state.zoomLevel));
+		}
+		if (typeof importedData.backgroundBlur === 'number') {
+			state.backgroundBlur = Math.max(0, Math.min(10, importedData.backgroundBlur));
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.BACKGROUND_BLUR, state.backgroundBlur));
+		}
+		if (importedData.searchMode) {
+			state.searchMode = importedData.searchMode;
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.SEARCH_MODE, importedData.searchMode));
+		}
+		if (importedData.selectedFont) {
+			writes.push(StorageManager.set(FontManager.STORAGE_KEY, importedData.selectedFont));
+		}
+		if (importedData.dimensions) {
+			writes.push(StorageManager.set(DimensionsManager.STORAGE_KEY, importedData.dimensions));
+		}
+		if (importedData.selectedCity) {
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.SELECTED_CITY, importedData.selectedCity));
+		}
+		if (importedData.customUrls) {
+			writes.push(StorageManager.set(CONFIG.STORAGE_KEYS.CUSTOM_URLS, importedData.customUrls));
+		}
+		// ⭐ background عمداً ذخیره/اعمال نمی‌شود
+
+		await Promise.all(writes);
+
+		// ---- اعمال مجدد همه‌چیز روی برنامه زنده ----
+		ThemeManager.applyTheme();
+		await FontManager.init();
+		await DimensionsManager.init();
+		// ⭐ BackgroundManager.initBackground() صدا زده نمی‌شود تا پس‌زمینه فعلی کاربر دست‌نخورده بماند
+
+		ZoomManager.applyZoom();
+		ZoomManager.updateZoomDisplay();
+
+		OverlayManager.applyBlur();
+		await EventManager.applySearchMode();
+
+		// رفرش آب‌وهوا اگر شهر تغییر کرده باشد
+		if (importedData.selectedCity) {
+			setTimeout(() => {
+				if (typeof Renderer !== 'undefined' && Renderer.refreshWeather) {
+					Renderer.refreshWeather();
+				}
+			}, 300);
+		}
+	}
+
+	// ============================================================
+	// ⭐ خروجی همه تنظیمات (بدون پس‌زمینه)
+	// ============================================================
+	static async exportSettings() {
+		const [
+			layout, settings, theme, customUrls,
+			selectedCity, zoomLevel, backgroundBlur, searchMode,
+			selectedFont, dimensions
+		] = await Promise.all([
+			StorageManager.get(CONFIG.STORAGE_KEYS.LAYOUT),
+			StorageManager.get(CONFIG.STORAGE_KEYS.SETTINGS),
+			StorageManager.get(CONFIG.STORAGE_KEYS.THEME),
+			StorageManager.get(CONFIG.STORAGE_KEYS.CUSTOM_URLS),
+			StorageManager.get(CONFIG.STORAGE_KEYS.SELECTED_CITY),
+			StorageManager.get(CONFIG.STORAGE_KEYS.ZOOM_LEVEL),
+			StorageManager.get(CONFIG.STORAGE_KEYS.BACKGROUND_BLUR),
+			StorageManager.get(CONFIG.STORAGE_KEYS.SEARCH_MODE),
+			StorageManager.get(FontManager.STORAGE_KEY),
+			StorageManager.get(DimensionsManager.STORAGE_KEY)
+		]);
+
+		const exportData = {
+			version: '2.0',
+			exportedAt: new Date().toISOString(),
+			layout: layout || state.layoutMap || {},
+			theme: theme || null,
+			settings: settings || null,
+			zoomLevel: (typeof zoomLevel === 'number') ? zoomLevel : state.zoomLevel,
+			backgroundBlur: (typeof backgroundBlur === 'number') ? backgroundBlur : state.backgroundBlur,
+			searchMode: searchMode || state.searchMode,
+			selectedFont: selectedFont || null,
+			dimensions: dimensions || null,
+			selectedCity: selectedCity || null,
+			customUrls: customUrls || null
+			// ⭐ background حذف شد تا فایل سنگین نشود
+		};
+
+		this.downloadFile(JSON.stringify(exportData, null, 2), 'layout_export.json', 'application/json');
+	}
+
+	static async importSettings(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = async (event) => {
+				try {
+					const importedData = JSON.parse(event.target.result);
+					await this.applySettingsData(importedData);
+					await Renderer.renderDashboard();
+					resolve(true);
+				} catch (error) {
+					reject(error);
+				}
+			};
+			reader.onerror = reject;
+			reader.readAsText(file);
+		});
+	}
+
+	static async importSettingsOnline(silent = false) {
+		const importedData = await this.fetchJsonFromUrl(CONFIG.ONLINE.SETTINGS_URL);
+		if (!importedData) return false;
+		try {
+			await this.applySettingsData(importedData);
+			return true;
+		} catch (error) {
+			console.error('خطا:', error);
+			return false;
+		}
+	}
+
 	static async importSettingsLocal(silent = false) {
 		try {
 			const localUrl = chrome.runtime.getURL('data/settings.json');
 			const response = await fetch(localUrl);
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 			const importedData = await response.json();
-			let layout = null;
-			if (importedData.layout) layout = importedData.layout;
-			else if (importedData && typeof importedData === 'object' && !importedData.bookmarks) layout = importedData;
-			if (!layout) throw new Error('اطلاعات چیدمان یافت نشد');
-			state.layoutMap = layout;
-			await StorageManager.set(CONFIG.STORAGE_KEYS.LAYOUT, state.layoutMap);
+			await this.applySettingsData(importedData);
 			return true;
-		} catch (error) { console.error('❌ خطا:', error); return false; }
+		} catch (error) {
+			console.error('❌ خطا:', error);
+			return false;
+		}
 	}
+
+	// -------- combinedLocalImport / combinedOnlineImport --------
 	static async combinedLocalImport(skipConfirm = true) {
 		const bookmarksOk = await this.importBookmarksLocal(skipConfirm);
 		if (bookmarksOk) {
@@ -1297,60 +1445,40 @@ class ImportExportManager {
 			if (settingsOk) await Renderer.renderDashboard();
 		}
 	}
-    static async exportBookmarks() {
-        const exportData = await BookmarkManager.exportBookmarks();
-        if (!exportData) { alert('خطا در export'); return; }
-        this.downloadFile(JSON.stringify(exportData, null, 2), 'bookmarks_export.json', 'application/json');
-    }
-    static async importBookmarks(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-                    if (!Array.isArray(importedData.bookmarks) && !Array.isArray(importedData)) throw new Error('فرمت نامعتبر');
-                    const success = await BookmarkManager.importBookmarks(importedData, true);
-                    if (success) { await Renderer.renderDashboard(); resolve(true); }
-                    else reject(new Error('خطا در import'));
-                } catch (error) { reject(error); }
-            };
-            reader.onerror = reject;
-            reader.readAsText(file);
-        });
-    }
-    static async exportSettings() {
-        const layoutData = { version: '1.0', exportedAt: new Date().toISOString(), layout: state.layoutMap || {} };
-        this.downloadFile(JSON.stringify(layoutData, null, 2), 'layout_export.json', 'application/json');
-    }
-    static async importSettings(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-                    let importedLayout = null;
-                    if (importedData.layout) importedLayout = importedData.layout;
-                    else if (importedData && typeof importedData === 'object' && !importedData.bookmarks) importedLayout = importedData.layout || importedData;
-                    if (!importedLayout) throw new Error('فرمت نامعتبر');
-                    state.layoutMap = importedLayout;
-                    await StorageManager.set(CONFIG.STORAGE_KEYS.LAYOUT, state.layoutMap);
-                    await Renderer.renderDashboard();
-                    resolve(true);
-                } catch (error) { reject(error); }
-            };
-            reader.onerror = reject;
-            reader.readAsText(file);
-        });
-    }
-    static downloadFile(data, filename, type) {
-        const blob = new Blob([data], { type });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
+
+	// -------- export/import بوکمارک‌ها --------
+	static async exportBookmarks() {
+		const exportData = await BookmarkManager.exportBookmarks();
+		if (!exportData) { alert('خطا در export'); return; }
+		this.downloadFile(JSON.stringify(exportData, null, 2), 'bookmarks_export.json', 'application/json');
+	}
+	static async importBookmarks(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = async (event) => {
+				try {
+					const importedData = JSON.parse(event.target.result);
+					if (!Array.isArray(importedData.bookmarks) && !Array.isArray(importedData)) throw new Error('فرمت نامعتبر');
+					const success = await BookmarkManager.importBookmarks(importedData, true);
+					if (success) { await Renderer.renderDashboard(); resolve(true); }
+					else reject(new Error('خطا در import'));
+				} catch (error) { reject(error); }
+			};
+			reader.onerror = reject;
+			reader.readAsText(file);
+		});
+	}
+
+	static downloadFile(data, filename, type) {
+		const blob = new Blob([data], { type });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url; a.download = filename;
+		document.body.appendChild(a); a.click();
+		document.body.removeChild(a); URL.revokeObjectURL(url);
+	}
 }
+
 
 // ==================== Renderer ====================
 class Renderer {
